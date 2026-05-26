@@ -340,7 +340,6 @@ export class GPSEngine {
       navigator.geolocation.clearWatch(this.watchId);
       this.watchId = null;
     }
-    this.lastPosition = null;
   }
 
   /**
