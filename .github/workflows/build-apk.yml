@@ -85,14 +85,19 @@ jobs:
           # Generate index (creates repo signing key in repo.keystore)
           fdroid update --create-key --use-date-from-apk --create-metadata
 
+          echo "--- repo contents ---"
+          ls -la repo/
+          echo "--- metadata contents ---"
+          ls -la metadata/ 2>/dev/null || echo "(no metadata)"
+
       - name: Prepare Pages artifact
         run: |
           # Create clean output structure
           mkdir -p pages/fdroid/repo
-          # Copy F-Droid repo files
+          # Find the APK (fdroid may rename it to package.name_version.apk)
           cp fdroid-build/repo/index.xml pages/fdroid/repo/
           cp fdroid-build/repo/index.jar pages/fdroid/repo/
-          cp fdroid-build/repo/openanchor.apk pages/fdroid/repo/
+          cp fdroid-build/repo/*.apk pages/fdroid/repo/
           # Create landing page
           cat > pages/index.html << 'EOF'
           <!DOCTYPE html>
