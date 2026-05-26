@@ -481,13 +481,12 @@ export class GPSEngine {
     const newLat = anchorLat + deltaLat;
     const newLng = anchorLng + deltaLng;
 
-    // Heading: boat points away from anchor (wind is pushing from anchor direction)
+    // Heading: bow points toward the anchor (boat weathervanes on its chain)
     const bearingFromAnchor = this.calculateBearing(
       { lat: anchorLat, lng: anchorLng },
       { lat: newLat, lng: newLng }
     );
-    // Boat bow points downwind = away from anchor
-    const heading = bearingFromAnchor;
+    const heading = (bearingFromAnchor + 180) % 360;
 
     this.updateSimPosition(newLat, newLng, heading);
   }
