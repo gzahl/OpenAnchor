@@ -485,6 +485,18 @@ function setupEventListeners(): void {
           gpsEngine.getSectorHeading(),
           gpsEngine.getLockAnchorAfterSet()
         );
+        // Force boat heading to update toward the shifted anchor position
+        const boatLatLng = appMap.getBoatLatLng();
+        if (boatLatLng) {
+          appMap.updateBoatMarker({
+            lat: boatLatLng.lat,
+            lng: boatLatLng.lng,
+            accuracy: 0,
+            speed: null,
+            heading: null,
+            timestamp: Date.now()
+          });
+        }
       }
     });
   };
