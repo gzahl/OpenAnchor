@@ -1,8 +1,8 @@
 # ⚓ OpenAnchor
 
-![Build](https://github.com/gzahl/OpenAnchor/actions/workflows/build-apk.yml/badge.svg)
-![Version](https://img.shields.io/github/v/release/gzahl/OpenAnchor?logo=github)
-![License](https://img.shields.io/github/license/gzahl/OpenAnchor)
+[![Build](https://github.com/gzahl/OpenAnchor/actions/workflows/build-apk.yml/badge.svg)](https://github.com/gzahl/OpenAnchor/actions/workflows/build-apk.yml)
+[![Version](https://img.shields.io/github/v/release/gzahl/OpenAnchor?logo=github)](https://github.com/gzahl/OpenAnchor/releases)
+[![License](https://img.shields.io/github/license/gzahl/OpenAnchor)](LICENSE)
 
 **Free & Open Source Anchor Alarm for Sailors**
 
