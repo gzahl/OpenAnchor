@@ -50,7 +50,7 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease
 
-      - name: Sign APK with CI key
+      - name: Sign APK
         run: |
           keytool -genkey -v -keystore release.keystore \
             -alias openanchor -keyalg RSA -keysize 2048 \
@@ -60,14 +60,20 @@ jobs:
             -storepass android \
             android/app/build/outputs/apk/release/app-release-unsigned.apk \
             openanchor
-          mkdir -p apk-out
           cp android/app/build/outputs/apk/release/app-release-unsigned.apk \
-            apk-out/openanchor.apk
+            openanchor.apk
 
-      - name: Generate F-Droid repo
-        uses: fdroid/actions/fdroid-pages@v2
-        with:
-          apk-dir: apk-out
+      - name: Install fdroidserver
+        run: pip install fdroidserver
+
+      - name: Create F-Droid repo
+        run: |
+          mkdir -p fdroid/repo
+          cp openanchor.apk fdroid/repo/
+          cd fdroid
+          fdroid update --create-key \
+            --use-date-from-apk \
+            --create-metadata
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
