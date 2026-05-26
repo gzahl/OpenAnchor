@@ -127,6 +127,19 @@ function initApp() {
     enableArmingButton(true);
     enableAnchorTuningButtons(true);
     
+    // Force boat heading to update toward the new anchor position
+    const boatLatLng = appMap.getBoatLatLng();
+    if (boatLatLng) {
+      appMap.updateBoatMarker({
+        lat: boatLatLng.lat,
+        lng: boatLatLng.lng,
+        accuracy: 0,
+        speed: null,
+        heading: null,
+        timestamp: Date.now()
+      });
+    }
+    
     // Play subtle audio click/chirp to confirm dropping anchor
     audioSynth.unlock();
   });
@@ -482,40 +495,73 @@ function setupEventListeners(): void {
   bindPadBtn(elPadW, 'W');
 
   // B. Drop Anchor Button (Manual placement)
-  elBtnAnchorSet.addEventListener('click', () => {
+elBtnAnchorSet.addEventListener('click', () => {
     audioSynth.unlock();
-    
+    const existingAnchor = gpsEngine.getAnchor();
+    const labelSpan = elBtnAnchorSet.querySelector('span[data-i18n]') as HTMLSpanElement;
+    if (existingAnchor) {
+        if (confirm(t('lift_anchor_confirm', gpsEngine.getLanguage()))) {
+            // Stop simulation if active
+            if (gpsEngine.getIsSimulationMode()) {
+                gpsEngine.setSimulationMode(false);
+                // Reset local simulation state
+                simMode = null;
+                if (simSwayIntervalId !== null) {
+                    window.clearInterval(simSwayIntervalId);
+                    simSwayIntervalId = null;
+                }
+                elBtnSimMode.classList.remove('active');
+                elSimControlPanel.classList.add('hidden');
+                updateSimModeButtons();
+            }
+            gpsEngine.clearAnchor();
+            gpsEngine.clearVesselHistory();
+            appMap.clearAnchor(); // Remove anchor marker and safety circle/sector from map
+            appMap.clearVesselTrack();
+            // Update label to "Set Anchor" after clearing
+            labelSpan.dataset.i18n = 'anchor_set';
+            labelSpan.textContent = t('anchor_set', gpsEngine.getLanguage());
+            enableArmingButton(false);
+            enableAnchorTuningButtons(false);
+        }
+        // If cancelled, keep label as "Lift Anchor" (already set)
+        return;
+    }
     // If tracking possesses a coordinates lock, anchor there.
     // Otherwise drop anchor in center of current map viewpoint.
     let targetLat = 54.3210;
     let targetLng = 10.1234;
-
+    
     const boatLatLng = appMap.getBoatLatLng();
     if (boatLatLng) {
-      targetLat = boatLatLng.lat;
-      targetLng = boatLatLng.lng;
+        targetLat = boatLatLng.lat;
+        targetLng = boatLatLng.lng;
     }
-
+    
     gpsEngine.setAnchor(targetLat, targetLng);
     const r = gpsEngine.getAlarmRadius();
     appMap.updateAnchorMarker(
-      targetLat, 
-      targetLng, 
-      r, 
-      gpsEngine.getIsArmed() ? 'SAFE' : 'DISARMED',
-      gpsEngine.getUseSectorAlarm(),
-      gpsEngine.getSectorWidth(),
-      gpsEngine.getSectorHeading(),
-      gpsEngine.getLockAnchorAfterSet()
+        targetLat, 
+        targetLng, 
+        r, 
+        gpsEngine.getIsArmed() ? 'SAFE' : 'DISARMED',
+        gpsEngine.getUseSectorAlarm(),
+        gpsEngine.getSectorWidth(),
+        gpsEngine.getSectorHeading(),
+        gpsEngine.getLockAnchorAfterSet()
     );
+    
+    // Update label to "Lift Anchor" after setting
+    labelSpan.dataset.i18n = 'alarm_disarm';
+    labelSpan.textContent = t('alarm_disarm', gpsEngine.getLanguage());
     
     // Flash green visual overlay confirmation
     enableArmingButton(true);
     enableAnchorTuningButtons(true);
-
+ 
     // Play synthesized check
     audioSynth.playSonarPing();
-  });
+});
 
   // C. Arm / Disarm Toggle
   elBtnAlarmArm.addEventListener('click', async () => {
