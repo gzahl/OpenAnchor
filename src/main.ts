@@ -638,7 +638,7 @@ function setupEventListeners(): void {
         enableArmingButton(true);
         enableAnchorTuningButtons(true);
       }
-      gpsEngine.resetSimToAnchor();
+      gpsEngine.startSwingSimulation();
       simMode = 'swing'; // default: swing mode on activation
       updateSimModeButtons();
 
@@ -647,7 +647,7 @@ function setupEventListeners(): void {
         simSwayIntervalId = window.setInterval(() => {
           if (simMode === 'drift') {
             gpsEngine.simulateSwayStep(true);
-          } else {
+          } else if (simMode === 'swing') {
             gpsEngine.simulateSwingAtAnchor();
           }
         }, 1000);
@@ -668,23 +668,20 @@ function setupEventListeners(): void {
   // H. Simulator mode selection buttons
   elBtnSimSwing.addEventListener('click', () => {
     simMode = 'swing';
-    gpsEngine.resetSimToAnchor();
+    gpsEngine.startSwingSimulation();
     updateSimModeButtons();
   });
 
   elBtnSimDrift.addEventListener('click', () => {
     simMode = 'drift';
-    gpsEngine.simulateSwayStep(false); // init drift distance
+    gpsEngine.startDriftSimulation();
     updateSimModeButtons();
   });
 
   elBtnSimReset.addEventListener('click', () => {
     audioSynth.unlock();
-    simMode = 'swing';
-    gpsEngine.resetSimToAnchor();
+    simMode = null;
     updateSimModeButtons();
-    const anchor = gpsEngine.getAnchor();
-    if (anchor) appMap.centerOn(anchor.lat, anchor.lng);
   });
 
   // I. Settings Toggle Buttons
@@ -938,6 +935,7 @@ function updateSimModeButtons(): void {
   // Highlight whichever mode is active
   elBtnSimSwing.classList.toggle('active', simMode === 'swing');
   elBtnSimDrift.classList.toggle('active', simMode === 'drift');
+  elBtnSimReset.classList.toggle('active', simMode === null);
 }
 
 /* ==========================================================================

@@ -132,8 +132,17 @@ export class GPSEngine {
     this.isSimulationMode = active;
     if (active) {
       this.stopTracking();
-      // Initialize sim coordinates around current anchor if anchor exists, else standard Baltic Sea
-      if (this.anchorPosition) {
+      // Initialize sim coordinates at current location if available, else around current anchor
+      if (this.lastPosition) {
+        this.simPosition = {
+          lat: this.lastPosition.lat,
+          lng: this.lastPosition.lng,
+          accuracy: 2.0,
+          speed: 0.1,
+          heading: this.lastPosition.heading || 0,
+          timestamp: Date.now()
+        };
+      } else if (this.anchorPosition) {
         this.simPosition = {
           lat: this.anchorPosition.lat + 0.0001, // ~11 meters north
           lng: this.anchorPosition.lng + 0.0001, // ~6 meters east
@@ -458,6 +467,45 @@ export class GPSEngine {
     this.simSwingPhase = 0;
     this.simDriftBearing = null;
     this.updateSimPosition(this.anchorPosition.lat, this.anchorPosition.lng, 0);
+  }
+
+  /**
+   * Initializes swing simulation at the boat's current position to prevent warping
+   */
+  public startSwingSimulation(): void {
+    if (!this.anchorPosition) return;
+    
+    // Calculate bearing from anchor to current boat position
+    const bearing = this.calculateBearing(this.anchorPosition, this.simPosition);
+    
+    // Set swing phase based on this bearing to ensure seamless transition
+    this.simSwingPhase = (bearing * Math.PI) / (0.18 * 180);
+    
+    // Calculate current distance to set initial base radius
+    this.simDriftDistance = this.calculateHaversine(
+      this.anchorPosition.lat,
+      this.anchorPosition.lng,
+      this.simPosition.lat,
+      this.simPosition.lng
+    );
+  }
+
+  /**
+   * Initializes drift simulation at the boat's current position to prevent warping
+   */
+  public startDriftSimulation(): void {
+    if (!this.anchorPosition) return;
+    
+    // Calculate current distance to set initial drift distance
+    this.simDriftDistance = this.calculateHaversine(
+      this.anchorPosition.lat,
+      this.anchorPosition.lng,
+      this.simPosition.lat,
+      this.simPosition.lng
+    );
+    
+    // Reset drift bearing so it locks in on the first step of simulateSwayStep
+    this.simDriftBearing = null;
   }
 
   /**
