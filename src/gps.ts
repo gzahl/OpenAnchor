@@ -134,7 +134,7 @@ export class GPSEngine {
     this.simVesselHistory = []; // Always clear simulation history when entering or leaving simulation mode
     if (active) {
       this.stopTracking();
-      // Initialize sim coordinates at current location if available, else around current anchor
+      // Initialize sim coordinates at last actual location if available, otherwise retain current simulated position
       if (this.lastPosition) {
         this.simPosition = {
           lat: this.lastPosition.lat,
@@ -142,15 +142,6 @@ export class GPSEngine {
           accuracy: 2.0,
           speed: 0.1,
           heading: this.lastPosition.heading || 0,
-          timestamp: Date.now()
-        };
-      } else if (this.anchorPosition) {
-        this.simPosition = {
-          lat: this.anchorPosition.lat + 0.0001, // ~11 meters north
-          lng: this.anchorPosition.lng + 0.0001, // ~6 meters east
-          accuracy: 2.5,
-          speed: 0.1,
-          heading: 45,
           timestamp: Date.now()
         };
       }
