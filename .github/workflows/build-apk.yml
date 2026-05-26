@@ -50,16 +50,18 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease
 
-      - name: Sign APK
+      - name: Sign APK with apksigner
         run: |
           keytool -genkey -v -keystore apk.keystore \
             -alias apk -keyalg RSA -keysize 2048 \
             -validity 10000 -storepass android -keypass android \
             -dname "CN=OpenAnchor CI, O=OpenAnchor, C=DE"
-          jarsigner -verbose -keystore apk.keystore \
-            -storepass android \
-            android/app/build/outputs/apk/release/app-release-unsigned.apk \
-            apk
+          # apksigner produces v1+v2+v3 signatures that fdroidserver accepts
+          $ANDROID_SDK_ROOT/build-tools/*/apksigner sign \
+            --ks apk.keystore \
+            --ks-pass pass:android \
+            --ks-key-alias apk \
+            android/app/build/outputs/apk/release/app-release-unsigned.apk
           mkdir -p apk
           cp android/app/build/outputs/apk/release/app-release-unsigned.apk \
             apk/openanchor.apk
@@ -94,10 +96,11 @@ jobs:
         run: |
           # Create clean output structure
           mkdir -p pages/fdroid/repo
-          # Find the APK (fdroid may rename it to package.name_version.apk)
+          # Find the APK (may be in repo/ or archive/ after fdroid update)
           cp fdroid-build/repo/index.xml pages/fdroid/repo/
           cp fdroid-build/repo/index.jar pages/fdroid/repo/
-          cp fdroid-build/repo/*.apk pages/fdroid/repo/
+          cp fdroid-build/repo/*.apk pages/fdroid/repo/ 2>/dev/null || true
+          cp fdroid-build/repo/archive/*.apk pages/fdroid/repo/ 2>/dev/null || true
           # Create landing page
           cat > pages/index.html << 'EOF'
           <!DOCTYPE html>
