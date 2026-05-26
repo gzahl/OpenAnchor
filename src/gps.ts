@@ -143,12 +143,20 @@ export class GPSEngine {
           timestamp: Date.now()
         };
       } else if (this.anchorPosition) {
+        const baseBearing = this.useSectorAlarm ? this.sectorHeading : 180;
+        const R_EARTH = 6378137;
+        const initDist = this.alarmRadius * 0.55;
+        const angleRad = (90 - baseBearing) * Math.PI / 180;
+        const deltaLat = (initDist / R_EARTH) * Math.sin(angleRad) * (180 / Math.PI);
+        const cosLat = Math.cos(this.anchorPosition.lat * Math.PI / 180);
+        const deltaLng = (initDist / R_EARTH) * Math.cos(angleRad) * (180 / Math.PI) / (cosLat !== 0 ? cosLat : 1);
+
         this.simPosition = {
-          lat: this.anchorPosition.lat + 0.0001, // ~11 meters north
-          lng: this.anchorPosition.lng + 0.0001, // ~6 meters east
+          lat: this.anchorPosition.lat + deltaLat,
+          lng: this.anchorPosition.lng + deltaLng,
           accuracy: 2.5,
           speed: 0.1,
-          heading: 45,
+          heading: (baseBearing + 180) % 360,
           timestamp: Date.now()
         };
       }
