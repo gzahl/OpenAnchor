@@ -757,6 +757,72 @@ input[type="range"]::-webkit-slider-thumb:active {
   line-height: 1.3;
 }
 
+.sim-mode-btns {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.btn-sim-mode {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-sim-mode svg {
+  width: 18px;
+  height: 18px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.btn-sim-mode:hover {
+  border-color: var(--neon-orange);
+  color: var(--neon-orange);
+}
+
+.btn-sim-mode.active {
+  background: rgba(255, 145, 0, 0.12);
+  border-color: var(--neon-orange);
+  color: var(--neon-orange);
+  box-shadow: 0 0 10px rgba(255, 145, 0, 0.2);
+}
+
+.btn-sim-mode.active svg {
+  opacity: 1;
+}
+
+.btn-sim-reset {
+  padding: 8px 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-sim-reset:hover {
+  color: var(--text-bright);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Legacy sim-actions (kept for compatibility) */
 .sim-actions {
   display: flex;
   gap: 8px;

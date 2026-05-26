@@ -9,7 +9,7 @@ import type { LanguageCode } from './i18n';
 
 // Main application handles
 let appMap: OpenAnchorMap;
-let isDriftingSimActive = false;
+let simMode: 'swing' | 'drift' | null = 'swing'; // active simulation mode
 let simSwayIntervalId: number | null = null;
 let firstLockAcquired = false;
 
@@ -46,6 +46,7 @@ const elStrobeMuteBtn = document.getElementById('strobe-mute-btn') as HTMLButton
 const elBtnSoundTest = document.getElementById('btn-sound-test') as HTMLButtonElement;
 const elBtnSimMode = document.getElementById('btn-sim-mode') as HTMLButtonElement;
 const elSimControlPanel = document.getElementById('sim-control-panel') as HTMLDivElement;
+const elBtnSimSwing = document.getElementById('btn-sim-swing') as HTMLButtonElement;
 const elBtnSimDrift = document.getElementById('btn-sim-drift') as HTMLButtonElement;
 const elBtnSimReset = document.getElementById('btn-sim-reset') as HTMLButtonElement;
 
@@ -623,7 +624,6 @@ function setupEventListeners(): void {
       // Place initial simulator position
       const anchor = gpsEngine.getAnchor();
       if (!anchor) {
-        // Set mock anchor if none exists
         gpsEngine.setAnchor(54.3210, 10.1234);
         appMap.updateAnchorMarker(
           54.3210, 
@@ -639,25 +639,25 @@ function setupEventListeners(): void {
         enableAnchorTuningButtons(true);
       }
       gpsEngine.resetSimToAnchor();
+      simMode = 'swing'; // default: swing mode on activation
+      updateSimModeButtons();
 
-      // Start background sway simulation loop
+      // Start background simulation loop
       if (simSwayIntervalId === null) {
         simSwayIntervalId = window.setInterval(() => {
-          gpsEngine.simulateSwayStep(isDriftingSimActive);
-          
-          // Map auto-centering during simulated drift
-          const a = gpsEngine.getAnchor();
-          if (a && isDriftingSimActive) {
-            appMap.centerOn(a.lat, a.lng);
+          if (simMode === 'drift') {
+            gpsEngine.simulateSwayStep(true);
+          } else {
+            gpsEngine.simulateSwingAtAnchor();
           }
         }, 1000);
       }
     } else {
       elBtnSimMode.classList.remove('active');
       elSimControlPanel.classList.add('hidden');
-      stopDriftSimulation();
+      simMode = null;
       
-      // Clear sway simulation loop
+      // Clear simulation loop
       if (simSwayIntervalId !== null) {
         window.clearInterval(simSwayIntervalId);
         simSwayIntervalId = null;
@@ -665,26 +665,26 @@ function setupEventListeners(): void {
     }
   });
 
-  // H. Simulator Drift Step
+  // H. Simulator mode selection buttons
+  elBtnSimSwing.addEventListener('click', () => {
+    simMode = 'swing';
+    gpsEngine.resetSimToAnchor();
+    updateSimModeButtons();
+  });
+
   elBtnSimDrift.addEventListener('click', () => {
-    audioSynth.unlock();
-    if (isDriftingSimActive) {
-      stopDriftSimulation();
-    } else {
-      startDriftSimulation();
-    }
+    simMode = 'drift';
+    gpsEngine.simulateSwayStep(false); // init drift distance
+    updateSimModeButtons();
   });
 
   elBtnSimReset.addEventListener('click', () => {
     audioSynth.unlock();
-    stopDriftSimulation();
+    simMode = 'swing';
     gpsEngine.resetSimToAnchor();
-    
-    // Zoom/Center Map
+    updateSimModeButtons();
     const anchor = gpsEngine.getAnchor();
-    if (anchor) {
-      appMap.centerOn(anchor.lat, anchor.lng);
-    }
+    if (anchor) appMap.centerOn(anchor.lat, anchor.lng);
   });
 
   // I. Settings Toggle Buttons
@@ -934,16 +934,10 @@ function setupEventListeners(): void {
   }
 }
 
-function startDriftSimulation(): void {
-  isDriftingSimActive = true;
-  elBtnSimDrift.innerText = 'DRIFT STOPPEN';
-  elBtnSimDrift.className = 'btn btn-secondary';
-}
-
-function stopDriftSimulation(): void {
-  isDriftingSimActive = false;
-  elBtnSimDrift.innerText = 'DRIFT SIMULIEREN';
-  elBtnSimDrift.className = 'btn btn-warning';
+function updateSimModeButtons(): void {
+  // Highlight whichever mode is active
+  elBtnSimSwing.classList.toggle('active', simMode === 'swing');
+  elBtnSimDrift.classList.toggle('active', simMode === 'drift');
 }
 
 /* ==========================================================================

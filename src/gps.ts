@@ -30,7 +30,7 @@ export class GPSEngine {
   // Simulator State
   private isSimulationMode = false;
   private simPosition: GPSPosition = {
-    lat: 54.3210, // Default mock coordinate (Baltic Sea near Kiel, Germany - a sailing hub!)
+    lat: 54.3210,
     lng: 10.1234,
     accuracy: 3.2,
     speed: 0.2,
@@ -39,6 +39,7 @@ export class GPSEngine {
   };
   private simSwayStep = 0;
   private simDriftDistance = 0;
+  private simSwingPhase = 0;     // continuous angle for swing-at-anchor mode
 
   private isArmed = false;
   private vesselHistory: GPSPosition[] = [];
@@ -442,7 +443,53 @@ export class GPSEngine {
     if (!this.isSimulationMode || !this.anchorPosition) return;
     this.simDriftDistance = 0;
     this.simSwayStep = 0;
+    this.simSwingPhase = 0;
     this.updateSimPosition(this.anchorPosition.lat, this.anchorPosition.lng, 0);
+  }
+
+  /**
+   * Simulate realistic anchored swinging:
+   * The boat orbits the anchor driven by a slowly-rotating wind vector.
+   * Radius varies between ~35% and ~85% of alarm radius (natural chain scope variation).
+   * The angular speed changes as radius changes (conservation of angular momentum feeling).
+   * Heading always points away from anchor (as wind pushes the stern).
+   */
+  public simulateSwingAtAnchor(): void {
+    if (!this.isSimulationMode || !this.anchorPosition) return;
+
+    this.simSwingPhase += 0.03; // ~1.7 ° per step at 1s interval
+
+    const anchorLat = this.anchorPosition.lat;
+    const anchorLng = this.anchorPosition.lng;
+    const R_EARTH = 6378137;
+
+    // Slowly shifting wind direction (full rotation every ~3.5 min at 1s steps)
+    const windDirRad = this.simSwingPhase * 0.18;
+
+    // Radius oscillates naturally: 50±25% of alarm radius, plus small noise
+    const baseRadius = this.alarmRadius * 0.55;
+    const radiusOscillation = this.alarmRadius * 0.25 * Math.sin(this.simSwingPhase * 0.4);
+    const noise = (Math.random() - 0.5) * this.alarmRadius * 0.04;
+    const radius = Math.max(this.alarmRadius * 0.2, baseRadius + radiusOscillation + noise);
+
+    // Compute new position
+    const angleMath = Math.PI / 2 - windDirRad; // convert compass to math angle
+    const deltaLat = (radius / R_EARTH) * Math.sin(angleMath) * (180 / Math.PI);
+    const cosLat = Math.cos(anchorLat * Math.PI / 180);
+    const deltaLng = (radius / R_EARTH) * Math.cos(angleMath) * (180 / Math.PI) / (cosLat || 1);
+
+    const newLat = anchorLat + deltaLat;
+    const newLng = anchorLng + deltaLng;
+
+    // Heading: boat points away from anchor (wind is pushing from anchor direction)
+    const bearingFromAnchor = this.calculateBearing(
+      { lat: anchorLat, lng: anchorLng },
+      { lat: newLat, lng: newLng }
+    );
+    // Boat bow points downwind = away from anchor
+    const heading = bearingFromAnchor;
+
+    this.updateSimPosition(newLat, newLng, heading);
   }
 
   /**

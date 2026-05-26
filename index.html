@@ -227,10 +227,17 @@
           <h3 data-i18n="sim_header">SIMULATOR-MODUS</h3>
           <span class="sim-badge" data-i18n="sim_active">AKTIV</span>
         </div>
-        <p class="sim-instruction" data-i18n="sim_instruction">Ziehe das Boots-Symbol auf der Karte, um Abdriften zu simulieren.</p>
-        <div class="sim-actions">
-          <button id="btn-sim-drift" class="btn btn-warning" data-i18n="sim_drift_start">DRIFT SIMULIEREN</button>
-          <button id="btn-sim-reset" class="btn btn-secondary-compact" data-i18n="sim_reset">ZURÜCKSETZEN</button>
+        <p class="sim-instruction" data-i18n="sim_instruction">Wähle einen Simulationsmodus. Das Boot beginnt sofort sich zu bewegen.</p>
+        <div class="sim-mode-btns">
+          <button id="btn-sim-swing" class="btn btn-sim-mode active" title="Normales Schwojen am Anker simulieren">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 22a10 10 0 0 1-10-10"/><circle cx="12" cy="12" r="3"/></svg>
+            <span data-i18n="sim_swing">SCHWOJ</span>
+          </button>
+          <button id="btn-sim-drift" class="btn btn-sim-mode" title="Abdriften simulieren (Alarm-Test)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="5 12 2 12 12 2 22 12 19 12"/><polyline points="19 12 22 12 12 22 2 12 5 12"/></svg>
+            <span data-i18n="sim_drift_start">DRIFT</span>
+          </button>
+          <button id="btn-sim-reset" class="btn btn-sim-reset" data-i18n="sim_reset">RESET</button>
         </div>
       </div>
 
