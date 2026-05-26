@@ -40,6 +40,7 @@ export class GPSEngine {
   private simSwayStep = 0;
   private simDriftDistance = 0;
   private simSwingPhase = 0;     // continuous angle for swing-at-anchor mode
+  private simDriftBearing: number | null = null; // Locked bearing for drift direction
 
   private isArmed = false;
   private vesselHistory: GPSPosition[] = [];
@@ -387,12 +388,7 @@ export class GPSEngine {
     // Base bearing to sway around: center on sector heading if enabled, otherwise South (180 deg)
     const baseBearing = this.useSectorAlarm ? this.sectorHeading : 180;
     
-    // Oscillation angle: sways over a 40° total angle (+/- 20 degrees)
-    const swingAmplitude = 20; // degrees
-    const swingAngle = baseBearing + Math.sin(this.simSwayStep * 0.15) * swingAmplitude;
-
-    // Add small bearing jitter (+/- 1.5 degrees)
-    const jitterBearing = swingAngle + (Math.random() - 0.5) * 3;
+    let jitterBearing: number;
 
     // Initialize simDriftDistance if not set or if reset
     if (this.simDriftDistance === 0) {
@@ -400,9 +396,25 @@ export class GPSEngine {
     }
 
     if (driftActive) {
+      // If drift begins, capture the bearing to drift away in a straight line
+      if (this.simDriftBearing === null) {
+        const swingAmplitude = 20; // degrees
+        const currentAngle = baseBearing + Math.sin(this.simSwayStep * 0.15) * swingAmplitude;
+        this.simDriftBearing = currentAngle + (Math.random() - 0.5) * 3;
+      }
       // Drifts outwards by ~1.2 meters per step
       this.simDriftDistance += 1.2;
+      // Add very tiny bearing fluctuation (+/- 0.5 degrees) for realistic wind/current drift
+      jitterBearing = this.simDriftBearing + (Math.random() - 0.5) * 1.0;
     } else {
+      // Reset drift bearing when not active
+      this.simDriftBearing = null;
+
+      // Regular anchored swinging simulation (oscillating)
+      const swingAmplitude = 20; // degrees
+      const swingAngle = baseBearing + Math.sin(this.simSwayStep * 0.15) * swingAmplitude;
+      jitterBearing = swingAngle + (Math.random() - 0.5) * 3;
+
       // Return to/stay at a safe range of 60% of the alarm radius
       const targetSafeRadius = this.alarmRadius * 0.6;
       // Smoothly interpolate back to safe radius if it was drifting before
@@ -444,6 +456,7 @@ export class GPSEngine {
     this.simDriftDistance = 0;
     this.simSwayStep = 0;
     this.simSwingPhase = 0;
+    this.simDriftBearing = null;
     this.updateSimPosition(this.anchorPosition.lat, this.anchorPosition.lng, 0);
   }
 
