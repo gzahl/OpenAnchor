@@ -90,7 +90,9 @@ jobs:
           cp fdroid-build/repo/*.apk pages/fdroid/repo/ 2>/dev/null || true
           cp fdroid-build/repo/archive/*.apk pages/fdroid/repo/ 2>/dev/null || true
           # Create landing page
-          cat > pages/index.html << 'EOF'
+          REPO_URL="https://gzahl.github.io/OpenAnchor/fdroid/repo"
+          QR_URL="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=$REPO_URL"
+          cat > pages/index.html << EOF
           <!DOCTYPE html>
           <html lang="en">
           <head>
@@ -105,14 +107,17 @@ jobs:
               code { display: inline-block; background: #1a2238; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; word-break: break-all; }
               a { color: #05ffb0; }
               .badge { display: inline-block; background: #1a2238; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.8rem; margin-top: 1rem; }
+              .qr { margin: 1.5rem 0; }
+              .qr img { border-radius: 12px; max-width: 100%; }
             </style>
           </head>
           <body>
             <div class="card">
               <h1>⚓ OpenAnchor</h1>
               <p>F-Droid repository for the OpenAnchor anchor alarm app.</p>
-              <p>Add this URL in your F-Droid client:</p>
-              <code>https://gzahl.github.io/OpenAnchor/fdroid/repo</code>
+              <div class="qr"><img src="$QR_URL" alt="QR Code" width="250" height="250"></div>
+              <p>Scan with F-Droid client, or add manually:</p>
+              <code>$REPO_URL</code>
               <br><br>
               <a href="fdroid/repo/">Browse repository</a>
               <div class="badge">✓ F-Droid Repo</div>
