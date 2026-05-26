@@ -147,8 +147,14 @@ export class GPSEngine {
       }
       this.triggerSimUpdate();
     } else {
-      if (this.isArmed) {
-        this.startTracking();
+      // Always resume live tracking when exiting simulation mode
+      this.startTracking();
+      // If we have a last actual GPS position, immediately trigger an update to snap the boat back to reality!
+      if (this.lastPosition) {
+        if (this.onPositionUpdateCallback) {
+          this.onPositionUpdateCallback(this.lastPosition);
+        }
+        this.evaluateAlarmState();
       }
     }
   }
