@@ -52,33 +52,83 @@ jobs:
 
       - name: Sign APK
         run: |
-          keytool -genkey -v -keystore release.keystore \
-            -alias openanchor -keyalg RSA -keysize 2048 \
+          keytool -genkey -v -keystore apk.keystore \
+            -alias apk -keyalg RSA -keysize 2048 \
             -validity 10000 -storepass android -keypass android \
             -dname "CN=OpenAnchor CI, O=OpenAnchor, C=DE"
-          jarsigner -verbose -keystore release.keystore \
+          jarsigner -verbose -keystore apk.keystore \
             -storepass android \
             android/app/build/outputs/apk/release/app-release-unsigned.apk \
-            openanchor
+            apk
+          mkdir -p apk
           cp android/app/build/outputs/apk/release/app-release-unsigned.apk \
-            openanchor.apk
+            apk/openanchor.apk
 
       - name: Install fdroidserver
         run: pip install fdroidserver
 
-      - name: Create F-Droid repo
+      - name: Build F-Droid repo
         run: |
-          mkdir -p fdroid/repo
-          cp openanchor.apk fdroid/repo/
-          cd fdroid
-          fdroid update --create-key \
-            --use-date-from-apk \
-            --create-metadata
+          set -e
+          # Create a clean build directory for fdroid
+          mkdir -p fdroid-build/repo fdroid-build/metadata
+          cp apk/openanchor.apk fdroid-build/repo/
+          cd fdroid-build
+
+          # Initialize repo config (uses separate keystore for repo index signing)
+          export ANDROID_HOME=$ANDROID_SDK_ROOT
+          fdroid init \
+            --keystore repo.keystore \
+            --repo-keyalias fdroid-repo \
+            --no-prompt
+
+          # Generate index (creates repo signing key in repo.keystore)
+          fdroid update --create-key --use-date-from-apk --create-metadata
+
+      - name: Prepare Pages artifact
+        run: |
+          # Create clean output structure
+          mkdir -p pages/fdroid/repo
+          # Copy F-Droid repo files
+          cp fdroid-build/repo/index.xml pages/fdroid/repo/
+          cp fdroid-build/repo/index.jar pages/fdroid/repo/
+          cp fdroid-build/repo/openanchor.apk pages/fdroid/repo/
+          # Create landing page
+          cat > pages/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>OpenAnchor – F-Droid Repo</title>
+            <style>
+              body { font-family: system-ui, sans-serif; background: #0b0e1a; color: #e0e6f0; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+              .card { background: #131827; border: 1px solid #2a3350; border-radius: 16px; padding: 3rem; text-align: center; max-width: 480px; }
+              h1 { font-size: 1.8rem; margin: 0 0 0.5rem; color: #05ffb0; }
+              p { color: #8c9bb4; line-height: 1.5; }
+              code { display: inline-block; background: #1a2238; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; word-break: break-all; }
+              a { color: #05ffb0; }
+              .badge { display: inline-block; background: #1a2238; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.8rem; margin-top: 1rem; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <h1>⚓ OpenAnchor</h1>
+              <p>F-Droid repository for the OpenAnchor anchor alarm app.</p>
+              <p>Add this URL in your F-Droid client:</p>
+              <code>https://gzahl.github.io/OpenAnchor/fdroid/repo</code>
+              <br><br>
+              <a href="fdroid/repo/">Browse repository</a>
+              <div class="badge">✓ F-Droid Repo</div>
+            </div>
+          </body>
+          </html>
+          EOF
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: fdroid
+          path: pages
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
