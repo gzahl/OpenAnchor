@@ -42,7 +42,7 @@ OpenAnchor is a Progressive Web App (PWA) that monitors your vessel's GPS positi
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/yourname/openanchor.git
+git clone https://github.com/gzahl/OpenAnchor.git
 cd openanchor
 
 # 2. Install dependencies
@@ -106,7 +106,7 @@ To install on your phone:
 
 1. Add the F-Droid repo in your F-Droid client:
    ```
-   https://<your-username>.github.io/OpenAnchor/fdroid/repo
+   https://gzahl.github.io/OpenAnchor/fdroid/repo
    ```
 2. Refresh and install **OpenAnchor**.
 
