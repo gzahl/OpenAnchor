@@ -1,5 +1,9 @@
 # ⚓ OpenAnchor
 
+![Build](https://github.com/gzahl/OpenAnchor/actions/workflows/build-apk.yml/badge.svg)
+![Version](https://img.shields.io/github/v/release/gzahl/OpenAnchor?logo=github)
+![License](https://img.shields.io/github/license/gzahl/OpenAnchor)
+
 **Free & Open Source Anchor Alarm for Sailors**
 
 OpenAnchor is a Progressive Web App (PWA) that monitors your vessel's GPS position while at anchor and triggers a visual/audio alarm if the boat drifts beyond a configurable radius. It runs entirely in the browser — no account, no cloud, no subscription.
