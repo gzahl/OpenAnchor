@@ -44,27 +44,15 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Build unsigned release APK
+      - name: Build and sign APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease
-
-      - name: Sign APK with apksigner
-        run: |
-          keytool -genkey -v -keystore apk.keystore \
-            -alias apk -keyalg RSA -keysize 2048 \
-            -validity 10000 -storepass android -keypass android \
-            -dname "CN=OpenAnchor CI, O=OpenAnchor, C=DE"
-          # apksigner produces v1+v2+v3 signatures that fdroidserver accepts
-          $ANDROID_SDK_ROOT/build-tools/*/apksigner sign \
-            --ks apk.keystore \
-            --ks-pass pass:android \
-            --ks-key-alias apk \
-            android/app/build/outputs/apk/release/app-release-unsigned.apk
-          mkdir -p apk
-          cp android/app/build/outputs/apk/release/app-release-unsigned.apk \
-            apk/openanchor.apk
+          # Build debug APK (pre-signed with Android debug key, valid for fdroid)
+          ./gradlew assembleDebug
+          mkdir -p $GITHUB_WORKSPACE/apk
+          cp app/build/outputs/apk/debug/app-debug.apk \
+            $GITHUB_WORKSPACE/apk/openanchor.apk
 
       - name: Install fdroidserver
         run: pip install fdroidserver
