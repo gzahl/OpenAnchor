@@ -39,6 +39,7 @@ export class GPSEngine {
   };
   private simSwayStep = 0;
   private simDriftBearing: number | null = null; // Locked bearing for drift direction
+  private simSwayCenterBearing: number | null = null; // Center bearing of the swing arc
 
   private isArmed = false;
   private vesselHistory: GPSPosition[] = [];
@@ -143,20 +144,12 @@ export class GPSEngine {
           timestamp: Date.now()
         };
       } else if (this.anchorPosition) {
-        const baseBearing = this.useSectorAlarm ? this.sectorHeading : 180;
-        const R_EARTH = 6378137;
-        const initDist = this.alarmRadius * 0.55;
-        const angleRad = (90 - baseBearing) * Math.PI / 180;
-        const deltaLat = (initDist / R_EARTH) * Math.sin(angleRad) * (180 / Math.PI);
-        const cosLat = Math.cos(this.anchorPosition.lat * Math.PI / 180);
-        const deltaLng = (initDist / R_EARTH) * Math.cos(angleRad) * (180 / Math.PI) / (cosLat !== 0 ? cosLat : 1);
-
         this.simPosition = {
-          lat: this.anchorPosition.lat + deltaLat,
-          lng: this.anchorPosition.lng + deltaLng,
+          lat: this.anchorPosition.lat + 0.0001, // ~11 meters north
+          lng: this.anchorPosition.lng + 0.0001, // ~6 meters east
           accuracy: 2.5,
           speed: 0.1,
-          heading: (baseBearing + 180) % 360,
+          heading: 45,
           timestamp: Date.now()
         };
       }
@@ -464,19 +457,20 @@ export class GPSEngine {
    * Initializes swing simulation at the boat's current position to prevent warping
    */
   public startSwingSimulation(): void {
-    this.simDriftBearing = null; // Forces recalculation from current position on first step
+    this.simDriftBearing = null;
+    this.simSwayCenterBearing = null; // Forces recalculation from current position on first step
   }
 
   /**
    * Initializes drift simulation at the boat's current position to prevent warping
    */
   public startDriftSimulation(): void {
-    this.simDriftBearing = null; // Forces recalculation from current position on first step
+    this.simDriftBearing = null;
   }
 
   /**
    * Simulate realistic anchored swinging:
-   * The boat orbits the anchor driven by a slowly-rotating wind vector.
+   * The boat orbits the anchor.
    * Radius varies between ~35% and ~85% of alarm radius (natural chain scope variation).
    * The angular speed changes as radius changes (conservation of angular momentum feeling).
    * Heading always points away from anchor (as wind pushes the stern).
@@ -493,10 +487,14 @@ export class GPSEngine {
     const currentDistance = this.calculateHaversine(anchor.lat, anchor.lng, boat.lat, boat.lng);
     const currentBearing = this.calculateBearing(anchor, boat);
 
-    // Target state: swing back and forth around the base bearing
-    const baseBearing = this.useSectorAlarm ? this.sectorHeading : 180;
+    // If center bearing is not set yet, capture current bearing as center of swing!
+    if (this.simSwayCenterBearing === null) {
+      this.simSwayCenterBearing = currentBearing;
+    }
+
+    // Target state: swing back and forth around our custom center bearing (not South/wind!)
     const swingAmplitude = 22.5; // degrees (max 22.5° deflection, total 45° swing range)
-    const swingAngle = baseBearing + Math.sin(this.simSwayStep * 0.12) * swingAmplitude;
+    const swingAngle = this.simSwayCenterBearing + Math.sin(this.simSwayStep * 0.12) * swingAmplitude;
     const desiredBearing = (swingAngle + 360) % 360;
 
     // Smoothly interpolate bearing to prevent jumping
