@@ -38,8 +38,6 @@ export class GPSEngine {
     timestamp: Date.now()
   };
   private simSwayStep = 0;
-  private simDriftDistance = 0;
-  private simSwingPhase = 0;     // continuous angle for swing-at-anchor mode
   private simDriftBearing: number | null = null; // Locked bearing for drift direction
 
   private isArmed = false;
@@ -396,67 +394,52 @@ export class GPSEngine {
 
     this.simSwayStep++;
 
-    // Base bearing to sway around: center on sector heading if enabled, otherwise South (180 deg)
-    const baseBearing = this.useSectorAlarm ? this.sectorHeading : 180;
+    const anchor = this.anchorPosition;
+    const boat = this.simPosition;
     
-    let jitterBearing: number;
+    // Get current polar coordinates relative to anchor
+    const currentDistance = this.calculateHaversine(anchor.lat, anchor.lng, boat.lat, boat.lng);
+    const currentBearing = this.calculateBearing(anchor, boat);
 
-    // Initialize simDriftDistance if not set or if reset
-    if (this.simDriftDistance === 0) {
-      this.simDriftDistance = this.alarmRadius * 0.6;
+    if (this.simDriftBearing === null) {
+      this.simDriftBearing = currentBearing;
     }
+
+    let nextDistance: number;
+    let nextBearing: number;
 
     if (driftActive) {
-      // If drift begins, capture the bearing to drift away in a straight line
-      if (this.simDriftBearing === null) {
-        const swingAmplitude = 20; // degrees
-        const currentAngle = baseBearing + Math.sin(this.simSwayStep * 0.15) * swingAmplitude;
-        this.simDriftBearing = currentAngle + (Math.random() - 0.5) * 3;
-      }
-      // Drifts outwards by ~1.2 meters per step
-      this.simDriftDistance += 1.2;
-      // Add very tiny bearing fluctuation (+/- 0.5 degrees) for realistic wind/current drift
-      jitterBearing = this.simDriftBearing + (Math.random() - 0.5) * 1.0;
+      // Drifts outwards linearly away from the anchor
+      nextDistance = currentDistance + 1.2 + (Math.random() - 0.5) * 0.4;
+      nextBearing = (this.simDriftBearing + (Math.random() - 0.5) * 0.8 + 360) % 360;
+      this.simDriftBearing = nextBearing;
     } else {
-      // Reset drift bearing when not active
-      this.simDriftBearing = null;
-
-      // Regular anchored swinging simulation (oscillating)
-      const swingAmplitude = 20; // degrees
-      const swingAngle = baseBearing + Math.sin(this.simSwayStep * 0.15) * swingAmplitude;
-      jitterBearing = swingAngle + (Math.random() - 0.5) * 3;
-
-      // Return to/stay at a safe range of 60% of the alarm radius
-      const targetSafeRadius = this.alarmRadius * 0.6;
-      // Smoothly interpolate back to safe radius if it was drifting before
-      if (this.simDriftDistance > targetSafeRadius) {
-        this.simDriftDistance -= 2.0; // quickly pull back to safe zone on reset
-        if (this.simDriftDistance < targetSafeRadius) {
-          this.simDriftDistance = targetSafeRadius;
-        }
-      } else {
-        this.simDriftDistance = targetSafeRadius;
-      }
+      // If drift is inactive, we slowly pull the boat back to the safe zone
+      const targetSafeRadius = this.alarmRadius * 0.55;
+      nextDistance = currentDistance + (targetSafeRadius - currentDistance) * 0.15 + (Math.random() - 0.5) * 0.4;
+      
+      const baseBearing = this.useSectorAlarm ? this.sectorHeading : 180;
+      let diff = baseBearing - this.simDriftBearing;
+      while (diff < -180) diff += 360;
+      while (diff > 180) diff -= 360;
+      this.simDriftBearing = (this.simDriftBearing + diff * 0.15 + 360) % 360;
+      nextBearing = this.simDriftBearing;
     }
-
-    // Add radius jitter (+/- 0.8 meters)
-    const jitterRadius = this.simDriftDistance + (Math.random() - 0.5) * 1.6;
 
     // Project coordinates from anchor
     const R_EARTH = 6378137;
-    const anchorLat = this.anchorPosition.lat;
-    const anchorLng = this.anchorPosition.lng;
+    const angleRad = (90 - nextBearing) * Math.PI / 180;
+    const deltaLat = (nextDistance / R_EARTH) * Math.sin(angleRad) * (180 / Math.PI);
+    const cosLat = Math.cos(anchor.lat * Math.PI / 180);
+    const deltaLng = (nextDistance / R_EARTH) * Math.cos(angleRad) * (180 / Math.PI) / (cosLat !== 0 ? cosLat : 1);
 
-    // Transform compass bearing (0 = North, 90 = East...) to math angle
-    const angleRad = (90 - jitterBearing) * Math.PI / 180;
-    const deltaLat = (jitterRadius / R_EARTH) * Math.sin(angleRad) * (180 / Math.PI);
-    const cosLat = Math.cos(anchorLat * Math.PI / 180);
-    const deltaLng = (jitterRadius / R_EARTH) * Math.cos(angleRad) * (180 / Math.PI) / (cosLat !== 0 ? cosLat : 1);
+    const newLat = anchor.lat + deltaLat;
+    const newLng = anchor.lng + deltaLng;
 
-    const newLat = anchorLat + deltaLat;
-    const newLng = anchorLng + deltaLng;
+    // Heading points away from anchor
+    const heading = (nextBearing + 180) % 360;
 
-    this.updateSimPosition(newLat, newLng);
+    this.updateSimPosition(newLat, newLng, heading);
   }
 
   /**
@@ -464,9 +447,7 @@ export class GPSEngine {
    */
   public resetSimToAnchor(): void {
     if (!this.isSimulationMode || !this.anchorPosition) return;
-    this.simDriftDistance = 0;
     this.simSwayStep = 0;
-    this.simSwingPhase = 0;
     this.simDriftBearing = null;
     this.updateSimPosition(this.anchorPosition.lat, this.anchorPosition.lng, 0);
   }
@@ -475,39 +456,14 @@ export class GPSEngine {
    * Initializes swing simulation at the boat's current position to prevent warping
    */
   public startSwingSimulation(): void {
-    if (!this.anchorPosition) return;
-    
-    // Calculate bearing from anchor to current boat position
-    const bearing = this.calculateBearing(this.anchorPosition, this.simPosition);
-    
-    // Set swing phase based on this bearing to ensure seamless transition
-    this.simSwingPhase = (bearing * Math.PI) / (0.18 * 180);
-    
-    // Calculate current distance to set initial base radius
-    this.simDriftDistance = this.calculateHaversine(
-      this.anchorPosition.lat,
-      this.anchorPosition.lng,
-      this.simPosition.lat,
-      this.simPosition.lng
-    );
+    this.simDriftBearing = null; // Forces recalculation from current position on first step
   }
 
   /**
    * Initializes drift simulation at the boat's current position to prevent warping
    */
   public startDriftSimulation(): void {
-    if (!this.anchorPosition) return;
-    
-    // Calculate current distance to set initial drift distance
-    this.simDriftDistance = this.calculateHaversine(
-      this.anchorPosition.lat,
-      this.anchorPosition.lng,
-      this.simPosition.lat,
-      this.simPosition.lng
-    );
-    
-    // Reset drift bearing so it locks in on the first step of simulateSwayStep
-    this.simDriftBearing = null;
+    this.simDriftBearing = null; // Forces recalculation from current position on first step
   }
 
   /**
@@ -520,36 +476,49 @@ export class GPSEngine {
   public simulateSwingAtAnchor(): void {
     if (!this.isSimulationMode || !this.anchorPosition) return;
 
-    this.simSwingPhase += 0.03; // ~1.7 ° per step at 1s interval
+    this.simSwayStep++;
 
-    const anchorLat = this.anchorPosition.lat;
-    const anchorLng = this.anchorPosition.lng;
+    const anchor = this.anchorPosition;
+    const boat = this.simPosition;
+    
+    // Get current polar coordinates relative to anchor
+    const currentDistance = this.calculateHaversine(anchor.lat, anchor.lng, boat.lat, boat.lng);
+    const currentBearing = this.calculateBearing(anchor, boat);
+
+    // Target state: swing back and forth around the base bearing
+    const baseBearing = this.useSectorAlarm ? this.sectorHeading : 180;
+    const swingAmplitude = 20; // degrees
+    const swingAngle = baseBearing + Math.sin(this.simSwayStep * 0.12) * swingAmplitude;
+    const desiredBearing = (swingAngle + 360) % 360;
+
+    // Smoothly interpolate bearing to prevent jumping
+    if (this.simDriftBearing === null) {
+      this.simDriftBearing = currentBearing;
+    }
+    let diff = desiredBearing - this.simDriftBearing;
+    while (diff < -180) diff += 360;
+    while (diff > 180) diff -= 360;
+    this.simDriftBearing = (this.simDriftBearing + diff * 0.15 + 360) % 360;
+
+    // Target safe radius: 55% of alarm radius, with slight natural oscillation
+    const targetSafeRadius = this.alarmRadius * 0.55;
+    const desiredDistance = targetSafeRadius + Math.sin(this.simSwayStep * 0.08) * (this.alarmRadius * 0.15);
+    
+    // Smoothly interpolate distance to prevent jumping
+    const nextDistance = currentDistance + (desiredDistance - currentDistance) * 0.15 + (Math.random() - 0.5) * 0.4;
+
+    // Project coordinates from anchor
     const R_EARTH = 6378137;
+    const angleRad = (90 - this.simDriftBearing) * Math.PI / 180;
+    const deltaLat = (nextDistance / R_EARTH) * Math.sin(angleRad) * (180 / Math.PI);
+    const cosLat = Math.cos(anchor.lat * Math.PI / 180);
+    const deltaLng = (nextDistance / R_EARTH) * Math.cos(angleRad) * (180 / Math.PI) / (cosLat !== 0 ? cosLat : 1);
 
-    // Slowly shifting wind direction (full rotation every ~3.5 min at 1s steps)
-    const windDirRad = this.simSwingPhase * 0.18;
+    const newLat = anchor.lat + deltaLat;
+    const newLng = anchor.lng + deltaLng;
 
-    // Radius oscillates naturally: 50±25% of alarm radius, plus small noise
-    const baseRadius = this.alarmRadius * 0.55;
-    const radiusOscillation = this.alarmRadius * 0.25 * Math.sin(this.simSwingPhase * 0.4);
-    const noise = (Math.random() - 0.5) * this.alarmRadius * 0.04;
-    const radius = Math.max(this.alarmRadius * 0.2, baseRadius + radiusOscillation + noise);
-
-    // Compute new position
-    const angleMath = Math.PI / 2 - windDirRad; // convert compass to math angle
-    const deltaLat = (radius / R_EARTH) * Math.sin(angleMath) * (180 / Math.PI);
-    const cosLat = Math.cos(anchorLat * Math.PI / 180);
-    const deltaLng = (radius / R_EARTH) * Math.cos(angleMath) * (180 / Math.PI) / (cosLat || 1);
-
-    const newLat = anchorLat + deltaLat;
-    const newLng = anchorLng + deltaLng;
-
-    // Heading: bow points toward the anchor (boat weathervanes on its chain)
-    const bearingFromAnchor = this.calculateBearing(
-      { lat: anchorLat, lng: anchorLng },
-      { lat: newLat, lng: newLng }
-    );
-    const heading = (bearingFromAnchor + 180) % 360;
+    // Heading points away from anchor
+    const heading = (this.simDriftBearing + 180) % 360;
 
     this.updateSimPosition(newLat, newLng, heading);
   }
