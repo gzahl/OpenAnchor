@@ -1,0 +1,78 @@
+name: Build APK & Deploy F-Droid Repo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build unsigned release APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Sign APK with CI key
+        run: |
+          keytool -genkey -v -keystore release.keystore \
+            -alias openanchor -keyalg RSA -keysize 2048 \
+            -validity 10000 -storepass android -keypass android \
+            -dname "CN=OpenAnchor CI, O=OpenAnchor, C=DE"
+          jarsigner -verbose -keystore release.keystore \
+            -storepass android \
+            android/app/build/outputs/apk/release/app-release-unsigned.apk \
+            openanchor
+          mkdir -p apk-out
+          cp android/app/build/outputs/apk/release/app-release-unsigned.apk \
+            apk-out/openanchor.apk
+
+      - name: Generate F-Droid repo
+        uses: fdroid/actions/fdroid-pages@v2
+        with:
+          apk-dir: apk-out
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: fdroid
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4

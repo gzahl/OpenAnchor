@@ -70,6 +70,46 @@ npm run preview
 
 ---
 
+## 📱 Native Android App (Capacitor)
+
+### Build APK locally
+
+```bash
+# 1. Build the web app
+npm run build
+
+# 2. Sync with Capacitor
+npx cap sync android
+
+# 3. Open in Android Studio (or build via CLI)
+npx cap open android
+```
+
+In Android Studio: **Build → Build Bundle(s) / APK(s) → Build APK**.  
+The APK lands in `android/app/build/outputs/apk/debug/`.
+
+### F-Droid Repository (CI)
+
+On every push to `main`, a GitHub Actions workflow automatically:
+
+1. Builds the web app
+2. Syncs Capacitor
+3. Compiles a signed release APK
+4. Generates an [F-Droid](https://f-droid.org/) repository
+5. Deploys the repo to **GitHub Pages**
+
+To install on your phone:
+
+1. Add the F-Droid repo in your F-Droid client:
+   ```
+   https://<your-username>.github.io/OpenAnchor/fdroid/repo
+   ```
+2. Refresh and install **OpenAnchor**.
+
+> The CI build uses an ephemeral debug key. For a production release, add your own keystore as [GitHub Actions secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions).
+
+---
+
 ## 📱 Using the App
 
 ### Setting an Anchor
