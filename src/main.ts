@@ -100,25 +100,9 @@ function initApp() {
   elSelectLanguage.value = savedLang;
   translateDOM(savedLang);
 
-  // Load existing anchor from localStorage if available
-  const savedAnchor = gpsEngine.getAnchor();
+  // Ensure no anchor is set when the app starts
+  gpsEngine.clearAnchor();
   const radius = gpsEngine.getAlarmRadius();
-  
-  if (savedAnchor) {
-    appMap.updateAnchorMarker(
-      savedAnchor.lat, 
-      savedAnchor.lng, 
-      radius, 
-      'DISARMED',
-      gpsEngine.getUseSectorAlarm(),
-      gpsEngine.getSectorWidth(),
-      gpsEngine.getSectorHeading(),
-      gpsEngine.getLockAnchorAfterSet()
-    );
-    appMap.centerOn(savedAnchor.lat, savedAnchor.lng, 16);
-    enableArmingButton(true);
-    enableAnchorTuningButtons(true);
-  }
 
   // Bind map interactions to GPS Engine
   appMap.onAnchorMoved((lat, lng) => {

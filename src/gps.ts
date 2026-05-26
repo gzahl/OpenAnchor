@@ -40,6 +40,7 @@ export class GPSEngine {
   private simSwayStep = 0;
   private simDriftBearing: number | null = null; // Locked bearing for drift direction
   private simSwayCenterBearing: number | null = null; // Center bearing of the swing arc
+  private simSwingCenterDistance: number | null = null; // Center distance of the swing arc
 
   private isArmed = false;
   private vesselHistory: GPSPosition[] = [];
@@ -450,6 +451,7 @@ export class GPSEngine {
     if (!this.isSimulationMode || !this.anchorPosition) return;
     this.simSwayStep = 0;
     this.simDriftBearing = null;
+    this.simSwingCenterDistance = null;
     this.updateSimPosition(this.anchorPosition.lat, this.anchorPosition.lng, 0);
   }
 
@@ -459,6 +461,7 @@ export class GPSEngine {
   public startSwingSimulation(): void {
     this.simDriftBearing = null;
     this.simSwayCenterBearing = null; // Forces recalculation from current position on first step
+    this.simSwingCenterDistance = null; // Forces recalculation from current position on first step
   }
 
   /**
@@ -492,6 +495,11 @@ export class GPSEngine {
       this.simSwayCenterBearing = currentBearing;
     }
 
+    // If center distance is not set yet, capture current distance as base of swing!
+    if (this.simSwingCenterDistance === null) {
+      this.simSwingCenterDistance = currentDistance;
+    }
+
     // Target state: swing back and forth around our custom center bearing (not South/wind!)
     const swingAmplitude = 22.5; // degrees (max 22.5° deflection, total 45° swing range)
     const swingAngle = this.simSwayCenterBearing + Math.sin(this.simSwayStep * 0.12) * swingAmplitude;
@@ -506,12 +514,12 @@ export class GPSEngine {
     while (diff > 180) diff -= 360;
     this.simDriftBearing = (this.simDriftBearing + diff * 0.15 + 360) % 360;
 
-    // Target safe radius: 55% of alarm radius, with slight natural oscillation
-    const targetSafeRadius = this.alarmRadius * 0.55;
-    const desiredDistance = targetSafeRadius + Math.sin(this.simSwayStep * 0.08) * (this.alarmRadius * 0.15);
+    // Maintain anchor distance with very slight oscillation (max +/- 1.2m)
+    const baseDistance = Math.max(5, this.simSwingCenterDistance);
+    const desiredDistance = baseDistance + Math.sin(this.simSwayStep * 0.08) * 1.2;
     
-    // Smoothly interpolate distance to prevent jumping
-    const nextDistance = currentDistance + (desiredDistance - currentDistance) * 0.15 + (Math.random() - 0.5) * 0.4;
+    // Smoothly interpolate distance with minor jitter (+/- 0.3m) to limit total fluctuation to max +/- 2m
+    const nextDistance = currentDistance + (desiredDistance - currentDistance) * 0.15 + (Math.random() - 0.5) * 0.6;
 
     // Project coordinates from anchor
     const R_EARTH = 6378137;
