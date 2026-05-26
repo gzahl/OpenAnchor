@@ -487,7 +487,7 @@ export class GPSEngine {
 
     // Target state: swing back and forth around the base bearing
     const baseBearing = this.useSectorAlarm ? this.sectorHeading : 180;
-    const swingAmplitude = 20; // degrees
+    const swingAmplitude = 45; // degrees (max 45° deflection)
     const swingAngle = baseBearing + Math.sin(this.simSwayStep * 0.12) * swingAmplitude;
     const desiredBearing = (swingAngle + 360) % 360;
 
