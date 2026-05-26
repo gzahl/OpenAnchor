@@ -155,7 +155,13 @@ export class OpenAnchorMap {
   public updateBoatMarker(pos: GPSPosition): void {
     if (!this.map) return;
 
-    const heading = pos.heading !== null ? pos.heading : 0;
+    let heading = pos.heading !== null ? pos.heading : 0;
+    
+    // Bow always points toward the anchor (boat weathervanes on its chain)
+    const anchor = gpsEngine.getAnchor();
+    if (anchor) {
+      heading = this.calculateBearing(pos, anchor);
+    }
     
     // Create Custom Glowing Boat SVG DivIcon
     const boatIcon = L.divIcon({
@@ -685,6 +691,22 @@ out center;`;
 
       this.anchorageLayer?.addLayer(marker);
     });
+  }
+
+  /**
+   * Calculates bearing from pos1 to pos2 (0-360 degrees)
+   */
+  private calculateBearing(pos1: { lat: number; lng: number }, pos2: { lat: number; lng: number }): number {
+    const lat1 = pos1.lat * Math.PI / 180;
+    const lat2 = pos2.lat * Math.PI / 180;
+    const dLon = (pos2.lng - pos1.lng) * Math.PI / 180;
+
+    const y = Math.sin(dLon) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) -
+              Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+              
+    const brng = Math.atan2(y, x) * 180 / Math.PI;
+    return (brng + 360) % 360;
   }
 }
 
