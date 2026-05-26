@@ -680,7 +680,30 @@ function setupEventListeners(): void {
 
   elBtnSimReset.addEventListener('click', () => {
     audioSynth.unlock();
+    
+    // 1. Exit simulation mode in gpsEngine (this will clear simVesselHistory and return to tracking if armed)
+    gpsEngine.setSimulationMode(false);
+    
+    // 2. Hide simulation control panel and remove active class from simulator button
     simMode = null;
+    elBtnSimMode.classList.remove('active');
+    elSimControlPanel.classList.add('hidden');
+    
+    // 3. Stop background simulation loop if active
+    if (simSwayIntervalId !== null) {
+      window.clearInterval(simSwayIntervalId);
+      simSwayIntervalId = null;
+    }
+    
+    // 4. Force immediate map redraw to clear simulation track and restore real track
+    appMap.drawVesselTrack(
+      gpsEngine.getVesselHistory(), 
+      gpsEngine.getDisplayLimitHours(),
+      gpsEngine.getTrackPointSize(),
+      gpsEngine.getTrackMinOpacity()
+    );
+    
+    // 5. Update UI buttons
     updateSimModeButtons();
   });
 

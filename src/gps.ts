@@ -44,6 +44,7 @@ export class GPSEngine {
 
   private isArmed = false;
   private vesselHistory: GPSPosition[] = [];
+  private simVesselHistory: GPSPosition[] = []; // Track points generated during simulation
   private historyLimitHours = 24; // Data log retention limit in hours
   private displayLimitHours = 24; // Map rendering filter in hours
   private trackPointSize = 4;
@@ -130,6 +131,7 @@ export class GPSEngine {
    */
   public setSimulationMode(active: boolean): void {
     this.isSimulationMode = active;
+    this.simVesselHistory = []; // Always clear simulation history when entering or leaving simulation mode
     if (active) {
       this.stopTracking();
       // Initialize sim coordinates at current location if available, else around current anchor
@@ -661,7 +663,7 @@ export class GPSEngine {
      ========================================================================== */
 
   public getVesselHistory(): GPSPosition[] {
-    return this.vesselHistory;
+    return this.isSimulationMode ? this.simVesselHistory : this.vesselHistory;
   }
 
   public getHistoryLimitHours(): number {
@@ -715,6 +717,23 @@ export class GPSEngine {
 
   private addTrackPoint(pos: GPSPosition): void {
     const now = Date.now();
+    
+    if (this.isSimulationMode) {
+      if (this.simVesselHistory.length > 0) {
+        const lastPoint = this.simVesselHistory[this.simVesselHistory.length - 1];
+        const distance = this.calculateHaversine(lastPoint.lat, lastPoint.lng, pos.lat, pos.lng);
+        const dT = (now - lastPoint.timestamp) / 1000;
+
+        if (distance < 2.5 && dT < this.trackIntervalSeconds) {
+          return; // Filter duplicate static log points in simulation
+        }
+      }
+      this.simVesselHistory.push({ ...pos, timestamp: now });
+      if (this.simVesselHistory.length > 500) {
+        this.simVesselHistory.shift();
+      }
+      return;
+    }
     
     // Only record if history is empty OR distance to last point > 2.5m OR dT > 60s
     if (this.vesselHistory.length > 0) {
