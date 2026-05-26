@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>OpenAnchor - Free & Open Source Boat Alarm</title>
+    <link rel="manifest" href="/manifest.json" />
+    <!-- Modern marine typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Full-screen Alarm Strobe Layer -->
+    <div id="alarm-strobe" class="alarm-strobe-overlay hidden">
+      <div class="alarm-strobe-content">
+        <svg class="icon-warning pulse-fast" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <h1 data-i18n="alarm_strobe_header">ANKERALARM!</h1>
+        <p class="drift-info" data-i18n="alarm_strobe_sub">Boot treibt ab!</p>
+        <div class="drift-stats">
+          <div><span data-i18n="alarm_strobe_dist">Entfernung</span>: <span id="strobe-distance">--</span>m</div>
+          <div><span data-i18n="alarm_strobe_rad">Radius</span>: <span id="strobe-radius">--</span>m</div>
+        </div>
+        <button id="strobe-mute-btn" class="btn btn-strobe" data-i18n="alarm_strobe_mute">STUMMSCHALTEN</button>
+      </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="app-container">
+      
+      <!-- Leaflet Map Container -->
+      <div id="map"></div>
+
+      <!-- Navigation & Compass Overlay -->
+      <div class="instrument-overlay">
+        
+        <!-- Header Panel -->
+        <header class="app-header glass">
+          <div class="logo-area">
+            <svg class="anchor-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="5" r="3"/>
+              <line x1="12" y1="22" x2="12" y2="8"/>
+              <path d="M5 12H2a10 10 0 0 0 20 0h-3"/>
+            </svg>
+            <div class="brand">
+              <h1>OpenAnchor</h1>
+              <span class="badge" id="app-version" data-i18n="logo_sub">Freier & offener Anker-Alarm</span>
+            </div>
+          </div>
+          <div class="status-indicators">
+            <div id="status-gps" class="indicator gps-waiting">
+              <span class="dot"></span>
+              <span class="text" data-i18n="gps_searching">GPS SUCHE</span>
+            </div>
+            <div id="status-alarm" class="indicator alarm-disarmed">
+              <span class="dot"></span>
+              <span class="text" data-i18n="status_inactive">INAKTIV</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- Dynamic Instrument Panel (Stats Drawer) -->
+        <div class="stats-panel glass">
+          <!-- Main Numeric Display -->
+          <div class="primary-dial">
+            <div class="label" data-i18n="scope_dist">ENTFERNUNG ZUM ANKER</div>
+            <div class="value-container">
+              <span id="dist-val" class="digital-value">--.-</span>
+              <span class="unit" data-i18n="meters">METER</span>
+            </div>
+            <!-- Scope Bar -->
+            <div class="scope-bar-wrapper">
+              <div id="scope-progress" class="scope-progress-bar"></div>
+            </div>
+          </div>
+
+          <!-- Secondary Telemetry Grid -->
+          <div class="telemetry-grid">
+            <div class="telemetry-card">
+              <span class="label" data-i18n="speed">GESCHWINDIGKEIT</span>
+              <span class="value" id="speed-val">0.0 <span class="unit-sub">kn</span></span>
+            </div>
+            <div class="telemetry-card">
+              <span class="label" data-i18n="cog">KURS (COG)</span>
+              <span class="value" id="cog-val">---°</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="label" data-i18n="gps_accuracy">GPS-GENAUIGKEIT</span>
+              <span class="value text-warning" id="accuracy-val">±-- <span class="unit-sub">m</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Action Controller (Bottom Controls) -->
+        <div class="control-panel glass">
+          
+          <!-- Quick Alarm Setting Controls -->
+          <div class="control-row inline-settings">
+            <div class="radius-controller">
+              <div class="label-row">
+                <span class="label" data-i18n="alarm_radius">ALARM-RADIUS</span>
+                <span class="radius-readout"><input type="number" id="radius-val-input" min="5" max="200" value="30" class="radius-num-input" /> m</span>
+              </div>
+              <div class="slider-row">
+                <button class="step-btn step-btn-double" id="radius-minus-10" title="-10m">-10</button>
+                <button class="step-btn" id="radius-minus-1" title="-1m">-1</button>
+                <input type="range" id="radius-slider" min="5" max="200" value="30" step="1" />
+                <button class="step-btn" id="radius-plus-1" title="+1m">+1</button>
+                <button class="step-btn step-btn-double" id="radius-plus-10" title="+10m">+10</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sector Alarm Controls (Main Menu) -->
+          <div class="control-row sector-main-controls" style="background: rgba(255, 255, 255, 0.03); padding: 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.02); margin-bottom: 8px;">
+            <div class="settings-toggle-row">
+              <label for="chk-sector-enable" class="settings-label-bold" data-i18n="settings_sector_enable">Sektor-Alarm aktivieren</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="chk-sector-enable" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            
+            <div id="sector-settings-controls" class="sector-settings-wrapper hidden">
+              <div class="control-row inline-settings" style="margin-top: 10px;">
+                <div class="radius-controller">
+                  <div class="label-row">
+                    <span class="label" data-i18n="settings_sector_width">ÖFFNUNGSWINKEL (BREITE)</span>
+                    <span class="radius-readout"><strong id="sector-width-val">90</strong>°</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="sector-width-slider" min="30" max="360" value="90" step="10" disabled />
+                  </div>
+                </div>
+              </div>
+
+              <div class="control-row inline-settings" style="margin-top: 10px;">
+                <div class="radius-controller">
+                  <div class="label-row">
+                    <span class="label" data-i18n="settings_sector_heading">AUSRICHTUNG (ZENTRUMSKURS)</span>
+                    <span class="radius-readout"><strong id="sector-heading-val">0</strong>°</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="sector-heading-slider" min="0" max="350" value="0" step="10" disabled />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Actions -->
+          <div class="control-row action-buttons">
+            <button id="btn-anchor-set" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span data-i18n="anchor_set">ANKER SETZEN</span>
+            </button>
+            <button id="btn-alarm-arm" class="btn btn-primary btn-disabled" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span data-i18n="alarm_arm">SCHARF SCHALTEN</span>
+            </button>
+          </div>
+
+          <!-- Directional Pad for Anchor Tuning -->
+          <div class="control-row anchor-adjuster-panel">
+            <span class="adjuster-label" data-i18n="fine_adjust">ANKER-FEINJUSTIERUNG (1m Schritte)</span>
+            <div class="dpad-container">
+              <div class="dpad-grid">
+                <div></div>
+                <button id="pad-n" class="dpad-btn btn-disabled" disabled title="Nord (+1m)" data-i18n="pad_n">N</button>
+                <div></div>
+                
+                <button id="pad-w" class="dpad-btn btn-disabled" disabled title="West (-1m)" data-i18n="pad_w">W</button>
+                <div class="dpad-center">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#ff3366" stroke-width="2"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>
+                  <span class="dpad-step">1m</span>
+                </div>
+                <button id="pad-e" class="dpad-btn btn-disabled" disabled title="Ost (+1m)" data-i18n="pad_e">O</button>
+                
+                <div></div>
+                <button id="pad-s" class="dpad-btn btn-disabled" disabled title="Süd (-1m)" data-i18n="pad_s">S</button>
+                <div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settings Tabs -->
+          <div class="control-row utilities">
+            <!-- Map Layers -->
+            <div class="map-selector">
+              <button class="map-layer-btn active" data-layer="seamap">SEAMAP</button>
+              <button class="map-layer-btn" data-layer="topo">TOPO</button>
+              <button class="map-layer-btn" data-layer="satellite">SAT</button>
+              <button class="map-layer-btn" data-layer="dark">DARK</button>
+            </div>
+            <!-- Extra Controls -->
+            <div class="extra-controls">
+              <!-- Sound Check -->
+              <button id="btn-sound-test" class="icon-btn" title="Sound-Test">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              </button>
+              <!-- Sim Mode -->
+              <button id="btn-sim-mode" class="icon-btn" title="Simulator-Modus">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <!-- Clear Track Quick Button -->
+              <button id="btn-clear-track-quick" class="icon-btn" title="Track-Daten löschen">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </button>
+              <!-- OSM Anchorage Spots Toggle -->
+              <button id="btn-anchorage-toggle" class="icon-btn" title="OSM-Ankerplätze anzeigen">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="22" r="1" fill="currentColor"/></svg>
+              </button>
+              <!-- Settings Toggle -->
+              <button id="btn-settings" class="icon-btn" title="Einstellungen">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Simulator Control Panel Overlay (only visible in sim mode) -->
+      <div id="sim-control-panel" class="sim-panel glass hidden">
+        <div class="sim-header">
+          <h3 data-i18n="sim_header">SIMULATOR-MODUS</h3>
+          <span class="sim-badge" data-i18n="sim_active">AKTIV</span>
+        </div>
+        <p class="sim-instruction" data-i18n="sim_instruction">Ziehe das Boots-Symbol auf der Karte, um Abdriften zu simulieren.</p>
+        <div class="sim-actions">
+          <button id="btn-sim-drift" class="btn btn-warning" data-i18n="sim_drift_start">DRIFT SIMULIEREN</button>
+          <button id="btn-sim-reset" class="btn btn-secondary-compact" data-i18n="sim_reset">ZURÜCKSETZEN</button>
+        </div>
+      </div>
+
+      <!-- Advanced Settings Panel (Tabbed) -->
+      <div id="settings-panel" class="settings-panel glass hidden">
+        <!-- Header: Title + Close -->
+        <div class="settings-header">
+          <h3 data-i18n="settings_header">EINSTELLUNGEN</h3>
+          <button id="btn-settings-close" class="close-btn">&times;</button>
+        </div>
+
+        <!-- Tab Bar (Segmented Control) -->
+        <div class="settings-tab-bar" role="tablist">
+          <button class="settings-tab active" id="tab-btn-general" data-tab="general" role="tab" aria-selected="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span data-i18n="tab_general">Allgemein</span>
+          </button>
+          <button class="settings-tab" id="tab-btn-design" data-tab="design" role="tab" aria-selected="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
+            <span data-i18n="tab_design">Design</span>
+          </button>
+          <button class="settings-tab" id="tab-btn-tracks" data-tab="tracks" role="tab" aria-selected="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span data-i18n="tab_tracks">Track</span>
+          </button>
+        </div>
+
+        <!-- Tab Panels Viewport (swipeable) -->
+        <div class="settings-tabs-viewport" id="settings-tabs-viewport">
+          <div class="settings-tabs-track" id="settings-tabs-track">
+
+            <!-- TAB 1: General -->
+            <div class="settings-tab-panel" id="tab-panel-general" role="tabpanel">
+              <!-- Language -->
+              <div class="settings-group">
+                <label for="select-language" class="settings-label-bold" data-i18n="settings_lang">Sprache / Language:</label>
+                <select id="select-language" class="select-box select-box-full" style="margin-top:6px;">
+                  <option value="de">Deutsch</option>
+                  <option value="en">English</option>
+                  <option value="es">Español</option>
+                  <option value="fr">Français</option>
+                  <option value="pt">Português</option>
+                  <option value="pl">Polski</option>
+                  <option value="it">Italiano</option>
+                  <option value="nl">Nederlands</option>
+                  <option value="hr">Hrvatski</option>
+                  <option value="sv">Svenska</option>
+                  <option value="da">Dansk</option>
+                  <option value="no">Norsk</option>
+                  <option value="fi">Suomi</option>
+                  <option value="el">Ελληνικά</option>
+                  <option value="tr">Türkçe</option>
+                </select>
+              </div>
+
+              <!-- Units -->
+              <div class="settings-group">
+                <label class="settings-label-bold" data-i18n="settings_unit_header">Maßeinheiten</label>
+                <select id="select-length-unit" class="select-box select-box-full" style="margin-top:6px;">
+                  <option value="m" data-i18n="unit_meters">Meter (m)</option>
+                  <option value="ft" data-i18n="unit_feet">Feet / Fuß (ft)</option>
+                </select>
+              </div>
+
+              <!-- Anchor Lock -->
+              <div class="settings-group">
+                <label class="settings-label-bold" data-i18n="settings_lock_header">Anker-Sperre</label>
+                <div class="settings-toggle-row" style="margin-top: 8px;">
+                  <label for="chk-lock-anchor" class="settings-label font-small" data-i18n="settings_lock_anchor">Anker nach Setzen sperren (nur D-Pad):</label>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="chk-lock-anchor" checked />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 2: Design -->
+            <div class="settings-tab-panel" id="tab-panel-design" role="tabpanel">
+              <div class="settings-group">
+                <label class="settings-label-bold" data-i18n="settings_design">Design &amp; Farben</label>
+                <p class="settings-subtext font-small" style="margin-top:4px;" data-i18n="settings_design_sub">Wähle eine einheitliche Leuchtfarbe für den Anker, die Sicherheitszonen und deine Schiffs-Trackpunkte.</p>
+                <div class="settings-toggle-row" style="margin-top: 10px;">
+                  <label for="select-theme-color" class="settings-label font-small" data-i18n="settings_theme_color">Instrumenten-Farbe:</label>
+                  <select id="select-theme-color" class="select-box">
+                    <option value="#ff3366" selected>Rot (Empfohlen)</option>
+                    <option value="#00d2ff">Blau / Cyan</option>
+                    <option value="#05ffb0">Grün</option>
+                    <option value="#ffcc00">Gelb</option>
+                    <option value="#ff9100">Orange</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 3: Tracks -->
+            <div class="settings-tab-panel" id="tab-panel-tracks" role="tabpanel">
+              <div class="settings-group">
+                <label class="settings-label-bold" data-i18n="settings_track_header">Schiffs-Trackaufzeichnung</label>
+                <p class="settings-subtext font-small" style="margin-top:4px;" data-i18n="settings_track_sub">Zeichnet die Bewegung der Yacht auf der Seekarte auf, um Swing-Rhythmen oder Slippen des Ankers zu erkennen.</p>
+
+                <div class="radius-controller" style="margin-top:10px;">
+                  <div class="label-row">
+                    <span class="label" data-i18n="settings_track_limit">DATENAUFZEICHNUNG (LÖSCHLIMIT)</span>
+                    <span class="radius-readout"><strong id="history-limit-val">24</strong> <span data-i18n="settings_hours">Std.</span></span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="history-limit-slider" min="1" max="24" value="24" step="1" />
+                  </div>
+                </div>
+
+                <div class="radius-controller" style="margin-top:8px;">
+                  <div class="label-row">
+                    <span class="label" data-i18n="settings_track_point_size">TRACK PUNKT-GRÖSSE</span>
+                    <span class="radius-readout"><strong id="track-point-size-val">4</strong> px</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="track-point-size-slider" min="1" max="12" value="4" step="1" />
+                  </div>
+                </div>
+
+                <div class="radius-controller" style="margin-top:8px;">
+                  <div class="label-row">
+                    <span class="label" data-i18n="settings_track_min_opacity">MIN. SICHTBARKEIT (ALTERUNG)</span>
+                    <span class="radius-readout"><strong id="track-min-opacity-val">10</strong>%</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="track-min-opacity-slider" min="0" max="60" value="10" step="5" />
+                  </div>
+                </div>
+
+                <div class="settings-toggle-row" style="margin-top:10px;">
+                  <label for="select-display-limit" class="settings-label font-small" data-i18n="settings_track_filter">Sichtbaren Track filtern auf:</label>
+                  <select id="select-display-limit" class="select-box">
+                    <option value="1">Letzte 1 Std.</option>
+                    <option value="3">Letzte 3 Std.</option>
+                    <option value="6">Letzte 6 Std.</option>
+                    <option value="12">Letzte 12 Std.</option>
+                    <option value="24" selected>Ganze 24 Std.</option>
+                  </select>
+                </div>
+
+                <div class="settings-toggle-row" style="margin-top:10px;">
+                  <label for="select-track-interval" class="settings-label font-small" data-i18n="settings_track_interval">Position tracken alle:</label>
+                  <select id="select-track-interval" class="select-box">
+                    <option value="5">5 Sek.</option>
+                    <option value="10">10 Sek.</option>
+                    <option value="30">30 Sek.</option>
+                    <option value="60" selected>1 Min. (Default)</option>
+                    <option value="120">2 Min.</option>
+                    <option value="300">5 Min.</option>
+                  </select>
+                </div>
+
+                <div class="settings-actions" style="margin-top:12px;">
+                  <button id="btn-clear-track" class="btn btn-secondary-compact danger-border" data-i18n="settings_track_clear">TRACK-DATEN LÖSCHEN</button>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /.settings-tabs-track -->
+        </div><!-- /.settings-tabs-viewport -->
+      </div>
+
+    </div>
+
+    <!-- Script Entry -->
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,1303 @@
+/* ==========================================================================
+   OpenAnchor Core Design System & CSS Stylesheet (Premium Dark Marine Theme)
+   ========================================================================== */
+
+/* 1. Global Reset & Variables */
+:root {
+  /* Colors */
+  --bg-deep: #070b16;
+  --bg-glass: #0c1224;
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --border-neon-dim: rgba(0, 191, 255, 0.2);
+  
+  --neon-blue: #00d2ff;
+  --neon-green: #05ffb0;
+  --neon-orange: #ff9100;
+  --neon-red: #ff3366;
+  --text-muted: #8c9bb4;
+  --text-bright: #e2eaf8;
+
+  /* Typography */
+  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+
+  font-size: 16px;
+  color-scheme: dark;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body, html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-deep);
+  font-family: var(--font-sans);
+  color: var(--text-bright);
+}
+
+/* 2. Container Layout */
+.app-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 3. Leaflet Map Customizations */
+#map {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  background-color: var(--bg-deep);
+}
+
+/* Custom dark leaflet styling */
+.leaflet-container {
+  background: var(--bg-deep) !important;
+}
+
+.leaflet-bar {
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.leaflet-bar a {
+  background-color: var(--bg-glass) !important;
+  border-bottom: 1px solid var(--border-glass) !important;
+  color: var(--text-bright) !important;
+  backdrop-filter: blur(10px);
+}
+
+.leaflet-bar a:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: var(--neon-blue) !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(0, 0, 0, 0.6) !important;
+  color: var(--text-muted) !important;
+  font-size: 10px !important;
+}
+
+/* Glowy SVG Markers */
+.anchor-svg-marker {
+  filter: drop-shadow(0 0 8px var(--neon-blue));
+  transition: transform 0.2s ease;
+}
+
+.boat-svg-marker {
+  filter: drop-shadow(0 0 6px var(--neon-green));
+  transition: transform 0.3s ease-out;
+}
+
+/* 4. Glassmorphic Overlays & Panels */
+.glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  border: 1px solid var(--border-glass);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  border-radius: 16px;
+}
+
+.instrument-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none; /* Let clicks pass to map except inside overlays */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px;
+}
+
+.instrument-overlay > * {
+  pointer-events: auto; /* Re-enable clicks for overlays */
+}
+
+/* 5. Header Component */
+.app-header {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: auto; /* Push stats panel down */
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.anchor-logo {
+  width: 24px;
+  height: 24px;
+  color: var(--neon-blue);
+  filter: drop-shadow(0 0 4px var(--neon-blue));
+}
+
+.brand h1 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.brand .badge {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  display: block;
+}
+
+/* Indicators */
+.status-indicators {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.indicator .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* GPS Indicator States */
+.gps-waiting .dot {
+  background-color: var(--neon-orange);
+  box-shadow: 0 0 8px var(--neon-orange);
+  animation: pulse-dot 1.5s infinite ease-in-out;
+}
+.gps-waiting .text { color: var(--neon-orange); }
+
+.gps-ready .dot {
+  background-color: var(--neon-green);
+  box-shadow: 0 0 8px var(--neon-green);
+}
+.gps-ready .text { color: var(--neon-green); }
+
+/* Alarm Indicator States */
+.alarm-disarmed .dot {
+  background-color: var(--text-muted);
+}
+.alarm-disarmed .text { color: var(--text-muted); }
+
+.alarm-armed .dot {
+  background-color: var(--neon-blue);
+  box-shadow: 0 0 8px var(--neon-blue);
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+.alarm-armed .text { color: var(--neon-blue); }
+
+.alarm-warning .dot {
+  background-color: var(--neon-orange);
+  box-shadow: 0 0 10px var(--neon-orange);
+  animation: pulse-dot 1s infinite ease-in-out;
+}
+.alarm-warning .text { color: var(--neon-orange); }
+
+.alarm-triggered .dot {
+  background-color: var(--neon-red);
+  box-shadow: 0 0 12px var(--neon-red);
+  animation: pulse-dot 0.5s infinite ease-in-out;
+}
+.alarm-triggered .text { color: var(--neon-red); }
+
+/* 6. Dynamic Instrument Panel */
+.stats-panel {
+  width: 100%;
+  max-width: 500px;
+  margin: 10px auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.primary-dial {
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-glass);
+}
+
+.primary-dial .label {
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.value-container {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px;
+  margin: 4px 0;
+}
+
+.digital-value {
+  font-family: var(--font-mono);
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  text-shadow: 0 0 10px rgba(226, 234, 248, 0.3);
+}
+
+/* Color states for distance value */
+.digital-value.safe {
+  color: var(--neon-green);
+  text-shadow: 0 0 12px rgba(5, 255, 176, 0.4);
+}
+.digital-value.warning {
+  color: var(--neon-orange);
+  text-shadow: 0 0 15px rgba(255, 145, 0, 0.4);
+}
+.digital-value.alarm {
+  color: var(--neon-red);
+  text-shadow: 0 0 20px rgba(255, 51, 102, 0.6);
+  animation: text-shake 0.3s infinite;
+}
+
+.primary-dial .unit {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Scope Progress Bar */
+.scope-bar-wrapper {
+  width: 100%;
+  height: 6px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 8px;
+  position: relative;
+}
+
+.scope-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--neon-blue);
+  box-shadow: 0 0 8px var(--neon-blue);
+  border-radius: 3px;
+  transition: width 0.3s ease-out, background-color 0.3s ease;
+}
+
+/* Telemetry Grid */
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.telemetry-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+}
+
+.telemetry-card .label {
+  display: block;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.telemetry-card .value {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+
+.telemetry-card .unit-sub {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+}
+
+.text-warning {
+  color: var(--neon-orange) !important;
+}
+
+.text-danger {
+  color: var(--neon-red) !important;
+}
+
+.text-success {
+  color: var(--neon-green) !important;
+}
+
+/* 7. Floating Action Controller Panel */
+.control-panel {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.control-row {
+  width: 100%;
+}
+
+.radius-controller {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.radius-controller .label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.radius-controller .label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.radius-readout {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--neon-blue);
+  text-shadow: 0 0 6px rgba(0, 210, 255, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.radius-num-input {
+  width: 52px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--neon-blue);
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 4px;
+  outline: none;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+}
+
+.radius-num-input:focus {
+  border-color: var(--neon-blue);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 210, 255, 0.4);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.radius-num-input::-webkit-outer-spin-button,
+.radius-num-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.radius-num-input {
+  -moz-appearance: textfield;
+}
+
+.step-btn-double {
+  width: 42px !important;
+  font-size: 0.75rem !important;
+  letter-spacing: -0.5px;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Range input styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  flex-grow: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--neon-blue);
+  cursor: pointer;
+  box-shadow: 0 0 8px var(--neon-blue);
+  transition: transform 0.1s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.2);
+}
+
+/* Button styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0077ff, #00d2ff);
+  color: white;
+  flex-grow: 1.5;
+  box-shadow: 0 4px 15px rgba(0, 119, 255, 0.3);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(0, 119, 255, 0.2);
+}
+
+/* Armed State */
+.btn-primary.armed {
+  background: linear-gradient(135deg, #cc0000, #ff3366);
+  box-shadow: 0 4px 15px rgba(255, 51, 102, 0.4);
+}
+
+.btn-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none !important;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-bright);
+  flex-grow: 1;
+}
+
+.btn-secondary:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Directional Pad (Steuerkreuz) styling */
+.anchor-adjuster-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.adjuster-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  margin-bottom: 2px;
+}
+
+.dpad-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.dpad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 46px);
+  grid-template-rows: repeat(3, 40px);
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
+
+.dpad-btn {
+  width: 46px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-bright);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  user-select: none;
+}
+
+.dpad-btn:active:not(.btn-disabled) {
+  background: rgba(0, 210, 255, 0.15);
+  border-color: var(--neon-blue);
+  color: var(--neon-blue);
+  transform: scale(0.95);
+  box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+}
+
+.dpad-btn.btn-disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none !important;
+}
+
+.dpad-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.dpad-center svg {
+  width: 18px;
+  height: 18px;
+  color: var(--neon-blue);
+  filter: drop-shadow(0 0 4px var(--neon-blue));
+}
+
+.dpad-step {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  margin-top: -1px;
+}
+
+.step-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-bright);
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-btn:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* Utilities row */
+.utilities {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 4px;
+}
+
+.map-selector {
+  display: flex;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.map-layer-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.map-layer-btn.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--neon-blue);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.extra-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.icon-btn:active, .icon-btn.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--neon-blue);
+  border-color: var(--border-neon-dim);
+}
+
+/* 8. Simulator Overlay Panel */
+.sim-panel {
+  position: absolute;
+  top: 90px;
+  right: 12px;
+  width: 280px;
+  padding: 12px;
+  z-index: 12;
+  border: 1px solid var(--neon-orange);
+  box-shadow: 0 0 15px rgba(255, 145, 0, 0.2);
+}
+
+.sim-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.sim-header h3 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--neon-orange);
+}
+
+.sim-badge {
+  background-color: var(--neon-orange);
+  color: black;
+  font-size: 0.55rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.sim-instruction {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.sim-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-warning {
+  background: var(--neon-orange);
+  color: black;
+  font-size: 0.75rem;
+  padding: 8px;
+  flex-grow: 1;
+}
+
+.btn-secondary-compact {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-bright);
+  font-size: 0.75rem;
+  padding: 8px;
+}
+
+/* 9. Fullscreen Alarm Strobe Layer */
+.alarm-strobe-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(136, 19, 19, 0.96);
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  animation: slow-breathing 4s infinite ease-in-out;
+}
+
+.alarm-strobe-content {
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid var(--neon-red);
+  box-shadow: 0 0 40px var(--neon-red);
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 90%;
+  width: 400px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.icon-warning {
+  width: 64px;
+  height: 64px;
+  color: var(--neon-red);
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 10px var(--neon-red));
+}
+
+.alarm-strobe-content h1 {
+  font-family: var(--font-sans);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--neon-red);
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  text-shadow: 0 0 15px rgba(255, 51, 102, 0.5);
+}
+
+.drift-info {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 24px;
+}
+
+.drift-stats {
+  display: flex;
+  justify-content: space-around;
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  color: var(--text-bright);
+  margin-bottom: 30px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 0;
+}
+
+.btn-strobe {
+  width: 100%;
+  background: var(--neon-red);
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 16px;
+  box-shadow: 0 0 20px rgba(255, 51, 102, 0.5);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* 10. Animations */
+@keyframes pulse-dot {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+}
+
+.pulse-fast {
+  animation: pulse-dot 0.6s infinite ease-in-out;
+}
+
+@keyframes slow-breathing {
+  0% {
+    background-color: rgba(136, 19, 19, 0.94);
+    box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8);
+  }
+  50% {
+    background-color: rgba(185, 28, 28, 0.97);
+    box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.9);
+  }
+  100% {
+    background-color: rgba(136, 19, 19, 0.94);
+    box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8);
+  }
+}
+
+@keyframes text-shake {
+  0% { transform: translate(1px, 1px) rotate(0deg); }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  20% { transform: translate(-3px, 0px) rotate(1deg); }
+  30% { transform: translate(0px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-3px, 1px) rotate(0deg); }
+  70% { transform: translate(2px, 1px) rotate(-1deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(2px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+/* 11. Advanced Settings Panel styling */
+.settings-panel {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 0);
+  width: 100%;
+  max-width: 500px;
+  /* Height auto-fits to content — no scrollbar needed */
+  max-height: 88vh;
+  z-index: 999;
+  padding: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  pointer-events: auto;
+}
+
+.settings-panel.hidden {
+  transform: translate(-50%, 100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border-glass);
+  flex-shrink: 0;
+}
+
+.settings-header h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--neon-blue);
+  letter-spacing: 0.5px;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.8rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s;
+  padding: 0 4px;
+}
+
+.close-btn:hover {
+  color: var(--neon-red);
+}
+
+/* === Settings Tab Bar (Segmented Control) === */
+.settings-tab-bar {
+  display: flex;
+  align-items: stretch;
+  padding: 10px 16px 0;
+  gap: 4px;
+  border-bottom: 1px solid var(--border-glass);
+  flex-shrink: 0;
+  background: transparent;
+}
+
+.settings-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 4px 10px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  bottom: -1px; /* align with bottom border of tab-bar */
+}
+
+.settings-tab svg {
+  width: 16px;
+  height: 16px;
+  transition: stroke 0.2s ease;
+}
+
+.settings-tab.active {
+  color: var(--neon-blue);
+  border-bottom-color: var(--neon-blue);
+}
+
+.settings-tab.active svg {
+  filter: drop-shadow(0 0 4px var(--neon-blue));
+}
+
+/* === Tab Panels Swipeable Viewport === */
+.settings-tabs-viewport {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.settings-tabs-track {
+  display: flex;
+  width: 300%; /* 3 tabs × 100% */
+  height: 100%;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.settings-tab-panel {
+  width: calc(100% / 3);
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* Hide scrollbar track visually but allow scroll if content is too tall */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.08) transparent;
+}
+
+.settings-tab-panel::-webkit-scrollbar {
+  width: 3px;
+}
+.settings-tab-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.settings-tab-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+/* Full-width select box utility */
+.select-box-full {
+  width: 100%;
+  display: block;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  padding: 14px;
+  border-radius: 12px;
+}
+
+.settings-toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.settings-label-bold {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.settings-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.settings-subtext {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.font-small {
+  font-size: 0.72rem !important;
+}
+
+/* Toggle Switch Switch styling */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: .3s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--text-bright);
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--neon-blue);
+  box-shadow: 0 0 8px rgba(0, 210, 255, 0.4);
+  border-color: var(--neon-blue);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+.select-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--text-bright);
+  padding: 6px 12px;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.select-box option {
+  background: var(--bg-deep);
+  color: var(--text-bright);
+}
+
+.sector-settings-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.disabled-group {
+  opacity: 0.25;
+  pointer-events: none;
+  filter: grayscale(1);
+}
+
+.danger-border {
+  border: 1px solid rgba(255, 51, 102, 0.3) !important;
+  color: var(--neon-red) !important;
+  background: rgba(255, 51, 102, 0.02);
+}
+
+.danger-border:active {
+  background: rgba(255, 51, 102, 0.12) !important;
+}
+
+.settings-actions {
+  display: flex;
+  margin-top: 4px;
+}
+
+/* Desktop Adaptive Media Queries */
+@media (min-width: 768px) {
+  .instrument-overlay {
+    padding: 24px;
+    align-items: flex-start;
+  }
+  .app-header, .stats-panel, .control-panel {
+    margin-left: 0;
+    margin-right: 0;
+    width: 380px;
+  }
+  .sim-panel {
+    top: 24px;
+    right: 24px;
+  }
+  
+  /* Desktop settings dialog style */
+  .settings-panel {
+    bottom: unset;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 420px;
+    height: 540px;
+    max-height: 85vh;
+    border-radius: 16px !important;
+    border: 1px solid var(--border-glass) !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  }
+  
+  .settings-panel.hidden {
+    transform: translate(-50%, -30%);
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+/* 12. Floating Scope Line Tooltip styling */
+.scope-tooltip {
+  background: rgba(10, 15, 30, 0.85) !important;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(0, 210, 255, 0.3) !important;
+  border-radius: 6px !important;
+  color: var(--neon-blue) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 10px rgba(0, 210, 255, 0.2) !important;
+  padding: 2px 6px !important;
+  user-select: none;
+  pointer-events: none; /* Let map clicks pass through tooltip */
+}
+
+.scope-tooltip::before {
+  display: none !important; /* Hide standard tooltip triangle arrow */
+}
+
+/* 13. Vessel Track Point Telemetry Tooltip styling */
+.track-point-tooltip {
+  background: rgba(10, 15, 30, 0.92) !important;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 8px !important;
+  color: var(--text-bright) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+  padding: 6px 10px !important;
+}
+
+.track-point-tooltip::before {
+  border-top-color: rgba(10, 15, 30, 0.92) !important;
+}
+
+/* 14. OSM Anchorage Spots Popup */
+.osm-anchorage-popup .leaflet-popup-content-wrapper {
+  background: rgba(10, 15, 30, 0.95) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 210, 255, 0.35) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 0 20px rgba(0, 210, 255, 0.15), 0 4px 20px rgba(0,0,0,0.6) !important;
+  color: var(--text-bright) !important;
+  font-family: var(--font-sans) !important;
+  padding: 0 !important;
+}
+
+.osm-anchorage-popup .leaflet-popup-content {
+  margin: 10px 12px !important;
+}
+
+.osm-anchorage-popup .leaflet-popup-tip-container {
+  display: none !important;
+}
+
+.osm-anchorage-popup .leaflet-popup-close-button {
+  color: var(--text-muted) !important;
+  font-size: 1.2rem !important;
+  top: 4px !important;
+  right: 6px !important;
+}
+
+.osm-anchorage-popup .leaflet-popup-close-button:hover {
+  color: var(--neon-red) !important;
+}
+
+/* Pulsing active state for anchorage button */
+#btn-anchorage-toggle.active {
+  background: rgba(0, 210, 255, 0.12);
+  color: var(--neon-blue);
+  border-color: var(--border-neon-dim);
+  box-shadow: 0 0 10px rgba(0, 210, 255, 0.25);
+}

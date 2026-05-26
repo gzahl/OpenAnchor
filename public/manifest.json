@@ -1,0 +1,18 @@
+{
+  "name": "OpenAnchor Boat Alarm",
+  "short_name": "OpenAnchor",
+  "description": "F-Droid compliant and free Progressive Web App Boat Anchor Alarm",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#070b16",
+  "theme_color": "#070b16",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
