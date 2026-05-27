@@ -110,14 +110,14 @@ body, html {
   border-radius: 0px !important;
 }
 
-/* 5. Header Component (Top Bar) */
+/* 5. Header Component (Top Bar - Paper Thin) */
 .app-header {
   width: 100%;
-  height: 52px;
+  height: 38px;
   flex-shrink: 0;
   background: var(--bg-glass);
-  border-bottom: 2px solid var(--border-glass);
-  padding: 0 12px;
+  border-bottom: 1px solid var(--border-glass);
+  padding: 0 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -127,54 +127,52 @@ body, html {
 .logo-area {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .anchor-logo {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   color: var(--neon-blue);
 }
 
 .brand h1 {
-  font-size: 1.05rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
-  line-height: 1.1;
+  letter-spacing: 0.2px;
+  line-height: 1;
 }
 
 .brand .badge {
-  font-size: 0.6rem;
-  color: var(--text-muted);
-  display: block;
+  display: none !important; /* Hide badge/subtitle on mobile to save vertical space */
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
-/* Indicators */
+/* Indicators (Super Compact Inline) */
 .status-indicators {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  align-items: flex-end;
+  flex-direction: row;
+  gap: 6px;
+  align-items: center;
 }
 
 .indicator {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.65rem;
+  gap: 4px;
+  font-size: 0.6rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.2px;
 }
 
 .indicator .dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   display: inline-block;
 }
@@ -215,16 +213,16 @@ body, html {
 }
 .alarm-triggered .text { color: var(--neon-red); }
 
-/* Top Header Quick Action Icons */
+/* Top Header Quick Action Icons (Ultra Compact) */
 .quick-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .quick-actions .icon-btn {
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: 4px;
   border: 1px solid var(--border-glass);
   background: rgba(255, 255, 255, 0.02);
@@ -236,8 +234,8 @@ body, html {
 }
 
 .quick-actions .icon-btn svg {
-  width: 15px;
-  height: 15px;
+  width: 13px;
+  height: 13px;
 }
 
 .quick-actions .icon-btn:active, 
@@ -247,16 +245,16 @@ body, html {
   border-color: var(--neon-blue);
 }
 
-/* 6. Solid Bottom Control Panel */
+/* 6. Solid Bottom Control Panel (Paper Thin) */
 .control-panel {
   width: 100%;
   flex-shrink: 0;
   background: var(--bg-glass);
-  border-top: 2px solid var(--border-glass);
-  padding: 8px 12px 10px;
+  border-top: 1px solid var(--border-glass);
+  padding: 4px 8px 6px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   z-index: 10;
 }
 
@@ -266,7 +264,7 @@ body, html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 0 6px;
+  padding: 2px 0 4px;
 }
 
 .stat-item {
@@ -283,19 +281,19 @@ body, html {
 }
 
 .stat-label {
-  font-size: 0.58rem;
+  font-size: 0.52rem;
   color: var(--text-muted);
   font-weight: 700;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.5px;
 }
 
 .stat-item .digital-value {
   font-family: var(--font-mono);
-  font-size: 1.18rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--text-bright);
   text-shadow: none !important;
-  margin-top: 1px;
+  margin-top: 0px;
 }
 
 /* Color states for flat stats text */
@@ -307,25 +305,25 @@ body, html {
 }
 
 .stat-unit {
-  font-size: 0.52rem;
+  font-size: 0.5rem;
   color: var(--text-muted);
   font-weight: 700;
-  margin-top: -2px;
+  margin-top: -3px;
 }
 
 .stat-unit-sub {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--text-muted);
 }
 
 /* Mini Scope Progress Bar directly under stats bar */
 .scope-bar-wrapper {
   width: 100%;
-  height: 4px;
+  height: 3px;
   background-color: rgba(255, 255, 255, 0.05);
   border-radius: 0px;
   overflow: hidden;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
   position: relative;
 }
 
@@ -346,9 +344,9 @@ body, html {
 .radius-controller {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   background: rgba(255, 255, 255, 0.01);
-  padding: 6px 8px;
+  padding: 4px 6px;
   border-radius: 4px;
   border: 1px solid var(--border-glass);
 }
@@ -360,38 +358,38 @@ body, html {
 }
 
 .radius-controller .label {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--text-muted);
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   font-weight: 700;
 }
 
 .radius-right-side {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .radius-readout {
   font-family: var(--font-mono);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--neon-blue);
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
 }
 
 .radius-num-input {
-  width: 44px;
+  width: 38px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-glass);
   border-radius: 4px;
   color: var(--neon-blue);
   font-family: var(--font-mono);
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
   text-align: center;
-  padding: 2px;
+  padding: 1px;
   outline: none;
 }
 
@@ -410,8 +408,8 @@ body, html {
 }
 
 .mini-toggle-btn {
-  width: 26px !important;
-  height: 26px !important;
+  width: 22px !important;
+  height: 22px !important;
   border-radius: 4px !important;
   background: rgba(255, 255, 255, 0.02) !important;
   border: 1px solid var(--border-glass) !important;
@@ -423,8 +421,8 @@ body, html {
 }
 
 .mini-toggle-btn svg {
-  width: 14px !important;
-  height: 14px !important;
+  width: 12px !important;
+  height: 12px !important;
 }
 
 .mini-toggle-btn.active {
@@ -434,22 +432,22 @@ body, html {
 }
 
 .step-btn-double {
-  width: 38px !important;
-  font-size: 0.7rem !important;
+  width: 32px !important;
+  font-size: 0.65rem !important;
   letter-spacing: -0.5px;
 }
 
 .slider-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
-/* Range input styling (Flat) */
+/* Range input styling (Flat & Super Thin) */
 input[type="range"] {
   -webkit-appearance: none;
   flex-grow: 1;
-  height: 4px;
+  height: 3px;
   border-radius: 0px;
   background: rgba(255, 255, 255, 0.08);
   outline: none;
@@ -458,8 +456,8 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 2px;
   background: var(--neon-blue);
   cursor: pointer;
@@ -470,18 +468,18 @@ input[type="range"]::-webkit-slider-thumb:active {
   transform: scale(1.1);
 }
 
-/* Flat solid buttons styling */
+/* Flat solid buttons styling (Super Compact) */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
   border: 1px solid var(--border-glass);
   border-radius: 4px;
-  padding: 10px 14px;
+  padding: 8px 10px;
   cursor: pointer;
   transition: background 0.1s ease;
   user-select: none;
@@ -489,8 +487,8 @@ input[type="range"]::-webkit-slider-thumb:active {
 }
 
 .btn svg {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
 }
 
 .btn-primary {
