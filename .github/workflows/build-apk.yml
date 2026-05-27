@@ -2,7 +2,7 @@ name: Build APK & Deploy F-Droid Repo
 
 on:
   push:
-    branches: [master]
+    branches: [master, main]
   workflow_dispatch:
 
 permissions:
@@ -83,12 +83,9 @@ jobs:
       - name: Prepare Pages artifact
         run: |
           # Create clean output structure
-          mkdir -p pages/fdroid/repo
-          # Find the APK (may be in repo/ or archive/ after fdroid update)
-          cp fdroid-build/repo/index.xml pages/fdroid/repo/
-          cp fdroid-build/repo/index.jar pages/fdroid/repo/
-          cp fdroid-build/repo/*.apk pages/fdroid/repo/ 2>/dev/null || true
-          cp fdroid-build/repo/archive/*.apk pages/fdroid/repo/ 2>/dev/null || true
+          mkdir -p pages/fdroid
+          # Copy the entire F-Droid repo folder recursively (includes index-v1.jar, index-v2.json, APKs, icons, etc.)
+          cp -r fdroid-build/repo pages/fdroid/
           # Create landing page
           REPO_URL="https://gzahl.github.io/OpenAnchor/fdroid/repo"
           QR_URL="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=$REPO_URL"
