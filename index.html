@@ -30,25 +30,22 @@
     <!-- Main Container -->
     <div class="app-container">
       
-      <!-- Leaflet Map Container -->
-      <div id="map"></div>
-
-      <!-- Navigation & Compass Overlay -->
-      <div class="instrument-overlay">
-        
-        <!-- Header Panel -->
-        <header class="app-header glass">
-          <div class="logo-area">
-            <svg class="anchor-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="5" r="3"/>
-              <line x1="12" y1="22" x2="12" y2="8"/>
-              <path d="M5 12H2a10 10 0 0 0 20 0h-3"/>
-            </svg>
-            <div class="brand">
-              <h1>OpenAnchor</h1>
-              <span class="badge" id="app-version" data-i18n="logo_sub">Freier & offener Anker-Alarm</span>
-            </div>
+      <!-- Solid Docked Header Bar (Top Bar) -->
+      <header class="app-header">
+        <div class="logo-area">
+          <svg class="anchor-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="5" r="3"/>
+            <line x1="12" y1="22" x2="12" y2="8"/>
+            <path d="M5 12H2a10 10 0 0 0 20 0h-3"/>
+          </svg>
+          <div class="brand">
+            <h1>OpenAnchor</h1>
+            <span class="badge" id="app-version" data-i18n="logo_sub">Freier & offener Anker-Alarm</span>
           </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Compact Status Indicators -->
           <div class="status-indicators">
             <div id="status-gps" class="indicator gps-waiting">
               <span class="dot"></span>
@@ -59,166 +56,171 @@
               <span class="text" data-i18n="status_inactive">INAKTIV</span>
             </div>
           </div>
-        </header>
-
-        <!-- Dynamic Instrument Panel (Stats Drawer) -->
-        <div class="stats-panel glass">
-          <!-- Main Numeric Display -->
-          <div class="primary-dial">
-            <div class="label" data-i18n="scope_dist">ENTFERNUNG ZUM ANKER</div>
-            <div class="value-container">
-              <span id="dist-val" class="digital-value">--.-</span>
-              <span class="unit" data-i18n="meters">METER</span>
-            </div>
-            <!-- Scope Bar -->
-            <div class="scope-bar-wrapper">
-              <div id="scope-progress" class="scope-progress-bar"></div>
-            </div>
+          
+          <!-- Secondary Actions & Utilities migrated to Top Bar -->
+          <div class="quick-actions">
+            <!-- Sound Check -->
+            <button id="btn-sound-test" class="icon-btn" title="Sound-Test">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            </button>
+            <!-- OSM Anchorage Spots Toggle -->
+            <button id="btn-anchorage-toggle" class="icon-btn" title="OSM-Ankerplätze anzeigen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="22" r="1" fill="currentColor"/></svg>
+            </button>
+            <!-- Clear Track Quick Button -->
+            <button id="btn-clear-track-quick" class="icon-btn" title="Track-Daten löschen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </button>
+            <!-- Sim Mode -->
+            <button id="btn-sim-mode" class="icon-btn" title="Simulator-Modus">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </button>
+            <!-- Settings Toggle -->
+            <button id="btn-settings" class="icon-btn" title="Einstellungen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
           </div>
+        </div>
+      </header>
 
-          <!-- Secondary Telemetry Grid -->
-          <div class="telemetry-grid">
-            <div class="telemetry-card">
-              <span class="label" data-i18n="speed">GESCHWINDIGKEIT</span>
-              <span class="value" id="speed-val">0.0 <span class="unit-sub">kn</span></span>
+      <!-- Center Map Viewport (Fills 80%+ Height) -->
+      <div id="map"></div>
+
+      <!-- Solid Docked Control Panel (Bottom Bar) -->
+      <div class="control-panel">
+        
+        <!-- Integrated Monospaced Telemetry Bar -->
+        <div class="stats-bar">
+          <div class="stat-item">
+            <span class="stat-label" data-i18n="scope_dist">ENTFERNUNG</span>
+            <span id="dist-val" class="digital-value">--.-</span>
+            <span class="stat-unit" data-i18n="meters">METER</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label" data-i18n="speed">SOG</span>
+            <span id="speed-val" class="digital-value">0.0 <span class="stat-unit-sub">kn</span></span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label" data-i18n="cog">COG</span>
+            <span id="cog-val" class="digital-value">---°</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label" data-i18n="gps_accuracy">GPS ACC</span>
+            <span id="accuracy-val" class="digital-value">±-- <span class="stat-unit-sub">m</span></span>
+          </div>
+        </div>
+
+        <!-- Sleek Mini Scope Progress Bar Directly Under Telemetry -->
+        <div class="scope-bar-wrapper">
+          <div id="scope-progress" class="scope-progress-bar"></div>
+        </div>
+
+        <!-- Ultra-Compact Alarm Radius Controller Row -->
+        <div class="control-row inline-settings">
+          <div class="radius-controller">
+            <div class="label-row">
+              <span class="label" data-i18n="alarm_radius">ALARM-RADIUS</span>
+              <div class="radius-right-side">
+                <span class="radius-readout">
+                  <input type="number" id="radius-val-input" min="5" max="200" value="30" class="radius-num-input" />
+                  <span class="unit-sub">m</span>
+                </span>
+                <!-- Fine Tune D-Pad toggle button -->
+                <button id="btn-toggle-dpad" class="icon-btn mini-toggle-btn" title="Feinjustierung (Steuerkreuz)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 2.12M12 2v4M12 18v4M4.93 4.93l2.12 2.12M3 12h3M18 12h3M19.07 19.07l-2.12-2.12"/></svg>
+                </button>
+              </div>
             </div>
-            <div class="telemetry-card">
-              <span class="label" data-i18n="cog">KURS (COG)</span>
-              <span class="value" id="cog-val">---°</span>
-            </div>
-            <div class="telemetry-card">
-              <span class="label" data-i18n="gps_accuracy">GPS-GENAUIGKEIT</span>
-              <span class="value text-warning" id="accuracy-val">±-- <span class="unit-sub">m</span></span>
+            <div class="slider-row">
+              <button class="step-btn step-btn-double" id="radius-minus-10" title="-10m">-10</button>
+              <button class="step-btn" id="radius-minus-1" title="-1m">-1</button>
+              <input type="range" id="radius-slider" min="5" max="200" value="30" step="1" />
+              <button class="step-btn" id="radius-plus-1" title="+1m">+1</button>
+              <button class="step-btn step-btn-double" id="radius-plus-10" title="+10m">+10</button>
             </div>
           </div>
         </div>
 
-        <!-- Floating Action Controller (Bottom Controls) -->
-        <div class="control-panel glass">
+        <!-- Sector Alarm Controls (Collapsible inline settings) -->
+        <div class="control-row sector-main-controls" style="background: rgba(255, 255, 255, 0.03); padding: 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.02); margin-bottom: 8px;">
+          <div class="settings-toggle-row">
+            <label for="chk-sector-enable" class="settings-label-bold" data-i18n="settings_sector_enable">Sektor-Alarm aktivieren</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="chk-sector-enable" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
           
-          <!-- Quick Alarm Setting Controls -->
-          <div class="control-row inline-settings">
-            <div class="radius-controller">
-              <div class="label-row">
-                <span class="label" data-i18n="alarm_radius">ALARM-RADIUS</span>
-                <span class="radius-readout"><input type="number" id="radius-val-input" min="5" max="200" value="30" class="radius-num-input" /> m</span>
-              </div>
-              <div class="slider-row">
-                <button class="step-btn step-btn-double" id="radius-minus-10" title="-10m">-10</button>
-                <button class="step-btn" id="radius-minus-1" title="-1m">-1</button>
-                <input type="range" id="radius-slider" min="5" max="200" value="30" step="1" />
-                <button class="step-btn" id="radius-plus-1" title="+1m">+1</button>
-                <button class="step-btn step-btn-double" id="radius-plus-10" title="+10m">+10</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sector Alarm Controls (Main Menu) -->
-          <div class="control-row sector-main-controls" style="background: rgba(255, 255, 255, 0.03); padding: 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.02); margin-bottom: 8px;">
-            <div class="settings-toggle-row">
-              <label for="chk-sector-enable" class="settings-label-bold" data-i18n="settings_sector_enable">Sektor-Alarm aktivieren</label>
-              <label class="toggle-switch">
-                <input type="checkbox" id="chk-sector-enable" />
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-            
-            <div id="sector-settings-controls" class="sector-settings-wrapper hidden">
-              <div class="control-row inline-settings" style="margin-top: 10px;">
-                <div class="radius-controller">
-                  <div class="label-row">
-                    <span class="label" data-i18n="settings_sector_width">ÖFFNUNGSWINKEL (BREITE)</span>
-                    <span class="radius-readout"><strong id="sector-width-val">90</strong>°</span>
-                  </div>
-                  <div class="slider-row">
-                    <input type="range" id="sector-width-slider" min="30" max="360" value="90" step="10" disabled />
-                  </div>
+          <div id="sector-settings-controls" class="sector-settings-wrapper hidden">
+            <div class="control-row inline-settings" style="margin-top: 10px;">
+              <div class="radius-controller">
+                <div class="label-row">
+                  <span class="label" data-i18n="settings_sector_width">ÖFFNUNGSWINKEL (BREITE)</span>
+                  <span class="radius-readout"><strong id="sector-width-val">90</strong>°</span>
+                </div>
+                <div class="slider-row">
+                  <input type="range" id="sector-width-slider" min="30" max="360" value="90" step="10" disabled />
                 </div>
               </div>
+            </div>
 
-              <div class="control-row inline-settings" style="margin-top: 10px;">
-                <div class="radius-controller">
-                  <div class="label-row">
-                    <span class="label" data-i18n="settings_sector_heading">AUSRICHTUNG (ZENTRUMSKURS)</span>
-                    <span class="radius-readout"><strong id="sector-heading-val">0</strong>°</span>
-                  </div>
-                  <div class="slider-row">
-                    <input type="range" id="sector-heading-slider" min="0" max="350" value="0" step="10" disabled />
-                  </div>
+            <div class="control-row inline-settings" style="margin-top: 10px;">
+              <div class="radius-controller">
+                <div class="label-row">
+                  <span class="label" data-i18n="settings_sector_heading">AUSRICHTUNG (ZENTRUMSKURS)</span>
+                  <span class="radius-readout"><strong id="sector-heading-val">0</strong>°</span>
+                </div>
+                <div class="slider-row">
+                  <input type="range" id="sector-heading-slider" min="0" max="350" value="0" step="10" disabled />
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Main Actions -->
-          <div class="control-row action-buttons">
-            <button id="btn-anchor-set" class="btn btn-secondary">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
-              <span data-i18n="anchor_set">ANKER SETZEN</span>
-            </button>
-            <button id="btn-alarm-arm" class="btn btn-primary btn-disabled" disabled>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <span data-i18n="alarm_arm">SCHARF SCHALTEN</span>
-            </button>
-          </div>
-
-          <!-- Directional Pad for Anchor Tuning -->
-          <div class="control-row anchor-adjuster-panel">
-            <span class="adjuster-label" data-i18n="fine_adjust">ANKER-FEINJUSTIERUNG (1m Schritte)</span>
-            <div class="dpad-container">
-              <div class="dpad-grid">
-                <div></div>
-                <button id="pad-n" class="dpad-btn btn-disabled" disabled title="Nord (+1m)" data-i18n="pad_n">N</button>
-                <div></div>
-                
-                <button id="pad-w" class="dpad-btn btn-disabled" disabled title="West (-1m)" data-i18n="pad_w">W</button>
-                <div class="dpad-center">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#ff3366" stroke-width="2"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>
-                  <span class="dpad-step">1m</span>
-                </div>
-                <button id="pad-e" class="dpad-btn btn-disabled" disabled title="Ost (+1m)" data-i18n="pad_e">O</button>
-                
-                <div></div>
-                <button id="pad-s" class="dpad-btn btn-disabled" disabled title="Süd (-1m)" data-i18n="pad_s">S</button>
-                <div></div>
+        <!-- Directional Pad for Anchor Tuning (Collapsible slide-up drawer, hidden by default) -->
+        <div class="control-row anchor-adjuster-panel hidden">
+          <span class="adjuster-label" data-i18n="fine_adjust">ANKER-FEINJUSTIERUNG (1m Schritte)</span>
+          <div class="dpad-container">
+            <div class="dpad-grid">
+              <div></div>
+              <button id="pad-n" class="dpad-btn btn-disabled" disabled title="Nord (+1m)" data-i18n="pad_n">N</button>
+              <div></div>
+              
+              <button id="pad-w" class="dpad-btn btn-disabled" disabled title="West (-1m)" data-i18n="pad_w">W</button>
+              <div class="dpad-center">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ff3366" stroke-width="2"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>
+                <span class="dpad-step">1m</span>
               </div>
+              <button id="pad-e" class="dpad-btn btn-disabled" disabled title="Ost (+1m)" data-i18n="pad_e">O</button>
+              
+              <div></div>
+              <button id="pad-s" class="dpad-btn btn-disabled" disabled title="Süd (-1m)" data-i18n="pad_s">S</button>
+              <div></div>
             </div>
           </div>
+        </div>
 
-          <!-- Settings Tabs -->
-          <div class="control-row utilities">
-            <!-- Map Layers -->
-            <div class="map-selector">
-              <button class="map-layer-btn active" data-layer="seamap">SEAMAP</button>
-              <button class="map-layer-btn" data-layer="topo">TOPO</button>
-              <button class="map-layer-btn" data-layer="satellite">SAT</button>
-              <button class="map-layer-btn" data-layer="dark">DARK</button>
-            </div>
-            <!-- Extra Controls -->
-            <div class="extra-controls">
-              <!-- Sound Check -->
-              <button id="btn-sound-test" class="icon-btn" title="Sound-Test">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-              </button>
-              <!-- Sim Mode -->
-              <button id="btn-sim-mode" class="icon-btn" title="Simulator-Modus">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              </button>
-              <!-- Clear Track Quick Button -->
-              <button id="btn-clear-track-quick" class="icon-btn" title="Track-Daten löschen">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-              </button>
-              <!-- OSM Anchorage Spots Toggle -->
-              <button id="btn-anchorage-toggle" class="icon-btn" title="OSM-Ankerplätze anzeigen">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="22" r="1" fill="currentColor"/></svg>
-              </button>
-              <!-- Settings Toggle -->
-              <button id="btn-settings" class="icon-btn" title="Einstellungen">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              </button>
-            </div>
+        <!-- Primary Action Buttons Row (Anchor Drop/Lift and Alarm Arm) -->
+        <div class="control-row action-buttons">
+          <button id="btn-anchor-set" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span data-i18n="anchor_set">ANKER SETZEN</span>
+          </button>
+          <button id="btn-alarm-arm" class="btn btn-primary btn-disabled" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span data-i18n="alarm_arm">SCHARF SCHALTEN</span>
+          </button>
+        </div>
+
+        <!-- Flat Docked Utilities & Map Layer Selector Bar -->
+        <div class="control-row utilities">
+          <div class="map-selector">
+            <button class="map-layer-btn active" data-layer="seamap">SEAMAP</button>
+            <button class="map-layer-btn" data-layer="topo">TOPO</button>
+            <button class="map-layer-btn" data-layer="satellite">SAT</button>
+            <button class="map-layer-btn" data-layer="dark">DARK</button>
           </div>
-
         </div>
 
       </div>

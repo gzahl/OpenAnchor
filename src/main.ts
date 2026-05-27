@@ -34,6 +34,8 @@ const elPadN = document.getElementById('pad-n') as HTMLButtonElement;
 const elPadS = document.getElementById('pad-s') as HTMLButtonElement;
 const elPadE = document.getElementById('pad-e') as HTMLButtonElement;
 const elPadW = document.getElementById('pad-w') as HTMLButtonElement;
+const elBtnToggleDpad = document.getElementById('btn-toggle-dpad') as HTMLButtonElement;
+const elAnchorAdjusterPanel = document.querySelector('.anchor-adjuster-panel') as HTMLDivElement;
 
 const elStatusGps = document.getElementById('status-gps') as HTMLDivElement;
 const elStatusAlarm = document.getElementById('status-alarm') as HTMLDivElement;
@@ -505,6 +507,15 @@ function setupEventListeners(): void {
   bindPadBtn(elPadS, 'S');
   bindPadBtn(elPadE, 'E');
   bindPadBtn(elPadW, 'W');
+
+  // Toggle D-Pad Panel Visibility
+  if (elBtnToggleDpad && elAnchorAdjusterPanel) {
+    elBtnToggleDpad.addEventListener('click', () => {
+      audioSynth.unlock();
+      elAnchorAdjusterPanel.classList.toggle('hidden');
+      elBtnToggleDpad.classList.toggle('active');
+    });
+  }
 
   // B. Drop Anchor Button (Manual placement)
 elBtnAnchorSet.addEventListener('click', () => {
