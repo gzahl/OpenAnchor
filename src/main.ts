@@ -1,4 +1,5 @@
 import './style.css';
+import { defineCustomElements } from '@ionic/core/loader';
 import { gpsEngine, GPSEngine } from './gps';
 import type { GPSPosition, AlarmState } from './gps';
 import { audioSynth } from './audio';
@@ -6,6 +7,9 @@ import { OpenAnchorMap } from './map';
 import { wakeLockManager } from './wakelock';
 import { translateDOM, t } from './i18n';
 import type { LanguageCode } from './i18n';
+
+// Initialize Ionic Framework Custom Elements
+defineCustomElements();
 
 // Main application handles
 let appMap: OpenAnchorMap;
@@ -56,7 +60,6 @@ const elMapLayerBtns = document.querySelectorAll('.map-layer-btn') as NodeListOf
 
 const elBtnSettings = document.getElementById('btn-settings') as HTMLButtonElement;
 const elBtnSettingsClose = document.getElementById('btn-settings-close') as HTMLButtonElement;
-const elSettingsPanel = document.getElementById('settings-panel') as HTMLDivElement;
 
 const elChkSectorEnable = document.getElementById('chk-sector-enable') as HTMLInputElement;
 const elSectorSettingsControls = document.getElementById('sector-settings-controls') as HTMLDivElement;
@@ -763,12 +766,14 @@ elBtnAnchorSet.addEventListener('click', () => {
   // I. Settings Toggle Buttons
   elBtnSettings.addEventListener('click', () => {
     audioSynth.unlock();
-    elSettingsPanel.classList.remove('hidden');
+    const menu = document.getElementById('settings-menu') as any;
+    if (menu) menu.open();
   });
 
   elBtnSettingsClose.addEventListener('click', () => {
     audioSynth.unlock();
-    elSettingsPanel.classList.add('hidden');
+    const menu = document.getElementById('settings-menu') as any;
+    if (menu) menu.close();
   });
 
   // Settings Tabs: Tab bar clicks + touch swipe

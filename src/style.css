@@ -1,9 +1,24 @@
+@import '@ionic/core/css/core.css';
+@import '@ionic/core/css/normalize.css';
+@import '@ionic/core/css/structure.css';
+@import '@ionic/core/css/typography.css';
+
 /* ==========================================================================
    OpenAnchor Core Design System & CSS Stylesheet (Option C: Clean Navy Minimalist)
    ========================================================================== */
 
 /* 1. Global Reset & Variables */
 :root {
+  /* Ionic Variables overrides */
+  --ion-background-color: #050b14;
+  --ion-text-color: #f8fafc;
+  --ion-font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --ion-color-primary: #ff3366;
+  --ion-color-primary-rgb: 255, 51, 102;
+  --ion-color-secondary: #10b981;
+  --ion-color-dark: #0b1325;
+  --ion-border-color: #1b2a47;
+
   /* Colors - Flat Solid Marine Navy Theme */
   --bg-deep: #050b14;
   --bg-glass: #0b1325;
