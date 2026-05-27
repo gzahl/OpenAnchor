@@ -4,6 +4,7 @@
  * Includes a full simulator mode for offline dashboard dry-runs.
  */
 
+import { Capacitor } from '@capacitor/core';
 import type { LanguageCode } from './i18n';
 import { detectSystemLanguage } from './i18n';
 
@@ -157,6 +158,7 @@ export class GPSEngine {
         this.evaluateAlarmState();
       }
     }
+    this.syncNativeService();
   }
 
   public getIsSimulationMode(): boolean {
@@ -170,6 +172,7 @@ export class GPSEngine {
     this.alarmRadius = Math.max(5, Math.min(200, radius));
     localStorage.setItem('openanchor_radius', this.alarmRadius.toString());
     this.evaluateAlarmState();
+    this.syncNativeService();
   }
 
   public getAlarmRadius(): number {
@@ -184,6 +187,7 @@ export class GPSEngine {
     localStorage.setItem('openanchor_anchor_lat', lat.toString());
     localStorage.setItem('openanchor_anchor_lng', lng.toString());
     this.evaluateAlarmState();
+    this.syncNativeService();
   }
 
   /**
@@ -239,6 +243,7 @@ export class GPSEngine {
     localStorage.removeItem('openanchor_anchor_lat');
     localStorage.removeItem('openanchor_anchor_lng');
     this.evaluateAlarmState();
+    this.syncNativeService();
   }
 
   /**
@@ -254,6 +259,7 @@ export class GPSEngine {
       this.stopTracking();
       this.setAlarmState('DISARMED', 0);
     }
+    this.syncNativeService();
   }
 
   public getIsArmed(): boolean {
@@ -534,6 +540,34 @@ export class GPSEngine {
   }
 
   /**
+   * Synchronizes the native Android Foreground Service with the current alarm parameters
+   */
+  private syncNativeService(): void {
+    if (Capacitor.getPlatform() === 'android') {
+      const anchor = this.getAnchor();
+      const plugins = Capacitor.Plugins as any;
+      if (plugins && plugins.BackgroundLocation) {
+        if (this.isArmed && anchor && !this.isSimulationMode) {
+          plugins.BackgroundLocation.startService({
+            lat: anchor.lat,
+            lng: anchor.lng,
+            radius: this.alarmRadius,
+            useSector: this.useSectorAlarm,
+            sectorWidth: this.sectorWidth,
+            sectorHeading: this.sectorHeading
+          }).catch((err: any) => {
+            console.error("Failed to start background location service:", err);
+          });
+        } else {
+          plugins.BackgroundLocation.stopService().catch((err: any) => {
+            console.error("Failed to stop background location service:", err);
+          });
+        }
+      }
+    }
+  }
+
+  /**
    * Evaluates if vessel is inside anchor range
    */
   private evaluateAlarmState(): void {
@@ -672,6 +706,7 @@ export class GPSEngine {
     this.useSectorAlarm = active;
     localStorage.setItem('openanchor_use_sector', active.toString());
     this.evaluateAlarmState();
+    this.syncNativeService();
   }
 
   public getSectorWidth(): number {
@@ -682,6 +717,7 @@ export class GPSEngine {
     this.sectorWidth = degrees;
     localStorage.setItem('openanchor_sector_width', degrees.toString());
     this.evaluateAlarmState();
+    this.syncNativeService();
   }
 
   public getSectorHeading(): number {
@@ -692,6 +728,7 @@ export class GPSEngine {
     this.sectorHeading = degrees;
     localStorage.setItem('openanchor_sector_heading', degrees.toString());
     this.evaluateAlarmState();
+    this.syncNativeService();
   }
 
   private addTrackPoint(pos: GPSPosition): void {
