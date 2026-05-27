@@ -72,6 +72,16 @@ jobs:
             --repo-keyalias fdroid-repo \
             --no-prompt
 
+          # Set repo name, description, and metadata details in config.yml
+          sed -i 's/First F-Droid Repo Demo/OpenAnchor Official Repository/g' config.yml
+          sed -i 's/My first F-Droid repository/Official F-Droid repository for the OpenAnchor boat alarm app/g' config.yml
+
+          # Place custom repository icons and logos
+          mkdir -p repo/icons
+          cp ../public/fdroid-icon.png repo/icons/icon.png
+          cp ../public/fdroid-icon.png repo/icons/icon-64.png
+          cp ../public/fdroid-icon.png repo/logo.png
+
           # Generate index (creates repo signing key in repo.keystore)
           fdroid update --create-key --use-date-from-apk --create-metadata
 
@@ -110,8 +120,9 @@ jobs:
           </head>
           <body>
             <div class="card">
-              <h1>⚓ OpenAnchor</h1>
-              <p>F-Droid repository for the OpenAnchor anchor alarm app.</p>
+              <div style="margin-bottom: 1rem;"><img src="fdroid/repo/icons/icon.png" alt="OpenAnchor Logo" width="96" height="96" style="border-radius: 20px; box-shadow: 0 8px 24px rgba(5, 255, 176, 0.2);"></div>
+              <h1>OpenAnchor</h1>
+              <p>Official F-Droid repository for the OpenAnchor boat alarm app.</p>
               <div class="qr"><img src="$QR_URL" alt="QR Code" width="250" height="250"></div>
               <p>Scan with F-Droid client, or add manually:</p>
               <code>$REPO_URL</code>
