@@ -17,78 +17,78 @@ let simMode: 'swing' | 'drift' | null = 'swing'; // active simulation mode
 let simSwayIntervalId: number | null = null;
 let firstLockAcquired = false;
 
-// DOM Elements
-const elDistVal = document.getElementById('dist-val') as HTMLSpanElement;
-const elScopeProgress = document.getElementById('scope-progress') as HTMLDivElement;
-const elSpeedVal = document.getElementById('speed-val') as HTMLSpanElement;
-const elCogVal = document.getElementById('cog-val') as HTMLSpanElement;
-const elAccuracyVal = document.getElementById('accuracy-val') as HTMLSpanElement;
+// DOM Elements (Casted to any for 100% Ionic web components compatibility)
+const elDistVal = document.getElementById('dist-val') as any;
+const elScopeProgress = document.getElementById('scope-progress') as any;
+const elSpeedVal = document.getElementById('speed-val') as any;
+const elCogVal = document.getElementById('cog-val') as any;
+const elAccuracyVal = document.getElementById('accuracy-val') as any;
 
-const elRadiusValInput = document.getElementById('radius-val-input') as HTMLInputElement;
-const elRadiusSlider = document.getElementById('radius-slider') as HTMLInputElement;
-const elRadiusMinus10 = document.getElementById('radius-minus-10') as HTMLButtonElement;
-const elRadiusMinus1 = document.getElementById('radius-minus-1') as HTMLButtonElement;
-const elRadiusPlus1 = document.getElementById('radius-plus-1') as HTMLButtonElement;
-const elRadiusPlus10 = document.getElementById('radius-plus-10') as HTMLButtonElement;
+const elRadiusValInput = document.getElementById('radius-val-input') as any;
+const elRadiusSlider = document.getElementById('radius-slider') as any;
+const elRadiusMinus10 = document.getElementById('radius-minus-10') as any;
+const elRadiusMinus1 = document.getElementById('radius-minus-1') as any;
+const elRadiusPlus1 = document.getElementById('radius-plus-1') as any;
+const elRadiusPlus10 = document.getElementById('radius-plus-10') as any;
 
-const elBtnAnchorSet = document.getElementById('btn-anchor-set') as HTMLButtonElement;
-const elBtnAlarmArm = document.getElementById('btn-alarm-arm') as HTMLButtonElement;
+const elBtnAnchorSet = document.getElementById('btn-anchor-set') as any;
+const elBtnAlarmArm = document.getElementById('btn-alarm-arm') as any;
 
-const elPadN = document.getElementById('pad-n') as HTMLButtonElement;
-const elPadS = document.getElementById('pad-s') as HTMLButtonElement;
-const elPadE = document.getElementById('pad-e') as HTMLButtonElement;
-const elPadW = document.getElementById('pad-w') as HTMLButtonElement;
-const elBtnToggleDpad = document.getElementById('btn-toggle-dpad') as HTMLButtonElement;
-const elAnchorAdjusterPanel = document.querySelector('.anchor-adjuster-panel') as HTMLDivElement;
+const elPadN = document.getElementById('pad-n') as any;
+const elPadS = document.getElementById('pad-s') as any;
+const elPadE = document.getElementById('pad-e') as any;
+const elPadW = document.getElementById('pad-w') as any;
+const elBtnToggleDpad = document.getElementById('btn-toggle-dpad') as any;
+const elAnchorAdjusterPanel = document.querySelector('.anchor-adjuster-panel') as any;
 
-const elStatusGps = document.getElementById('status-gps') as HTMLDivElement;
-const elStatusAlarm = document.getElementById('status-alarm') as HTMLDivElement;
+const elStatusGps = document.getElementById('status-gps') as any;
+const elStatusAlarm = document.getElementById('status-alarm') as any;
 
-const elAlarmStrobe = document.getElementById('alarm-strobe') as HTMLDivElement;
-const elStrobeDistance = document.getElementById('strobe-distance') as HTMLSpanElement;
-const elStrobeRadius = document.getElementById('strobe-radius') as HTMLSpanElement;
-const elStrobeMuteBtn = document.getElementById('strobe-mute-btn') as HTMLButtonElement;
+const elAlarmStrobe = document.getElementById('alarm-strobe') as any;
+const elStrobeDistance = document.getElementById('strobe-distance') as any;
+const elStrobeRadius = document.getElementById('strobe-radius') as any;
+const elStrobeMuteBtn = document.getElementById('strobe-mute-btn') as any;
 
-const elBtnSoundTest = document.getElementById('btn-sound-test') as HTMLButtonElement;
-const elBtnSimMode = document.getElementById('btn-sim-mode') as HTMLButtonElement;
-const elSimControlPanel = document.getElementById('sim-control-panel') as HTMLDivElement;
-const elBtnSimSwing = document.getElementById('btn-sim-swing') as HTMLButtonElement;
-const elBtnSimDrift = document.getElementById('btn-sim-drift') as HTMLButtonElement;
-const elBtnSimReset = document.getElementById('btn-sim-reset') as HTMLButtonElement;
+const elBtnSoundTest = document.getElementById('btn-sound-test') as any;
+const elBtnSimMode = document.getElementById('btn-sim-mode') as any;
+const elSimControlPanel = document.getElementById('sim-control-panel') as any;
+const elBtnSimSwing = document.getElementById('btn-sim-swing') as any;
+const elBtnSimDrift = document.getElementById('btn-sim-drift') as any;
+const elBtnSimReset = document.getElementById('btn-sim-reset') as any;
 
-const elMapLayerBtns = document.querySelectorAll('.map-layer-btn') as NodeListOf<HTMLButtonElement>;
+const elMapLayerBtns = document.querySelectorAll('.map-layer-btn') as any;
 
-const elBtnSettings = document.getElementById('btn-settings') as HTMLButtonElement;
-const elBtnSettingsClose = document.getElementById('btn-settings-close') as HTMLButtonElement;
+const elBtnSettings = document.getElementById('btn-settings') as any;
+const elBtnSettingsClose = document.getElementById('btn-settings-close') as any;
 
-const elChkSectorEnable = document.getElementById('chk-sector-enable') as HTMLInputElement;
-const elSectorSettingsControls = document.getElementById('sector-settings-controls') as HTMLDivElement;
-const elSectorWidthSlider = document.getElementById('sector-width-slider') as HTMLInputElement;
-const elSectorWidthVal = document.getElementById('sector-width-val') as HTMLSpanElement;
-const elSectorHeadingSlider = document.getElementById('sector-heading-slider') as HTMLInputElement;
-const elSectorHeadingVal = document.getElementById('sector-heading-val') as HTMLSpanElement;
+const elChkSectorEnable = document.getElementById('chk-sector-enable') as any;
+const elSectorSettingsControls = document.getElementById('sector-settings-controls') as any;
+const elSectorWidthSlider = document.getElementById('sector-width-slider') as any;
+const elSectorWidthVal = document.getElementById('sector-width-val') as any;
+const elSectorHeadingSlider = document.getElementById('sector-heading-slider') as any;
+const elSectorHeadingVal = document.getElementById('sector-heading-val') as any;
 
-const elHistoryLimitSlider = document.getElementById('history-limit-slider') as HTMLInputElement;
-const elHistoryLimitVal = document.getElementById('history-limit-val') as HTMLSpanElement;
-const elSelectDisplayLimit = document.getElementById('select-display-limit') as HTMLSelectElement;
-const elBtnClearTrack = document.getElementById('btn-clear-track') as HTMLButtonElement;
+const elHistoryLimitSlider = document.getElementById('history-limit-slider') as any;
+const elHistoryLimitVal = document.getElementById('history-limit-val') as any;
+const elSelectDisplayLimit = document.getElementById('select-display-limit') as any;
+const elBtnClearTrack = document.getElementById('btn-clear-track') as any;
 
-const elTrackPointSizeSlider = document.getElementById('track-point-size-slider') as HTMLInputElement;
-const elTrackPointSizeVal = document.getElementById('track-point-size-val') as HTMLSpanElement;
-const elTrackMinOpacitySlider = document.getElementById('track-min-opacity-slider') as HTMLInputElement;
-const elTrackMinOpacityVal = document.getElementById('track-min-opacity-val') as HTMLSpanElement;
+const elTrackPointSizeSlider = document.getElementById('track-point-size-slider') as any;
+const elTrackPointSizeVal = document.getElementById('track-point-size-val') as any;
+const elTrackMinOpacitySlider = document.getElementById('track-min-opacity-slider') as any;
+const elTrackMinOpacityVal = document.getElementById('track-min-opacity-val') as any;
 
-const elSelectThemeColor = document.getElementById('select-theme-color') as HTMLSelectElement;
-const elSelectTrackInterval = document.getElementById('select-track-interval') as HTMLSelectElement;
-const elBtnClearTrackQuick = document.getElementById('btn-clear-track-quick') as HTMLButtonElement;
+const elSelectThemeColor = document.getElementById('select-theme-color') as any;
+const elSelectTrackInterval = document.getElementById('select-track-interval') as any;
+const elBtnClearTrackQuick = document.getElementById('btn-clear-track-quick') as any;
 
-const elSelectLanguage = document.getElementById('select-language') as HTMLSelectElement;
-const elChkLockAnchor = document.getElementById('chk-lock-anchor') as HTMLInputElement;
-const elSelectLengthUnit = document.getElementById('select-length-unit') as HTMLSelectElement;
-const elBtnAnchorageToggle = document.getElementById('btn-anchorage-toggle') as HTMLButtonElement;
+const elSelectLanguage = document.getElementById('select-language') as any;
+const elChkLockAnchor = document.getElementById('chk-lock-anchor') as any;
+const elSelectLengthUnit = document.getElementById('select-length-unit') as any;
+const elBtnAnchorageToggle = document.getElementById('btn-anchorage-toggle') as any;
 
 // Settings Tab Elements
-const elTabBtns = document.querySelectorAll('.settings-tab') as NodeListOf<HTMLButtonElement>;
+const elTabBtns = document.querySelectorAll('.settings-tab') as any;
 const elTabsTrack = document.getElementById('settings-tabs-track') as HTMLDivElement;
 const elTabsViewport = document.getElementById('settings-tabs-viewport') as HTMLDivElement;
 
@@ -418,9 +418,9 @@ function toggleSectorSettingsState(active: boolean): void {
    ========================================================================== */
 
 function setupEventListeners(): void {
-  // A. Tactile Precision Radius Widget Events
-  elRadiusSlider.addEventListener('input', (e) => {
-    const r = parseInt((e.target as HTMLInputElement).value, 10);
+  // A. Tactile Precision Radius Widget Events (Using Ionic ionInput and ionChange)
+  elRadiusSlider.addEventListener('ionInput', (e: any) => {
+    const r = parseInt(e.target.value, 10);
     elRadiusValInput.value = r.toString();
     
     // Dynamic map circle resizing while dragging slider
@@ -439,8 +439,8 @@ function setupEventListeners(): void {
     }
   });
 
-  elRadiusSlider.addEventListener('change', (e) => {
-    const r = parseInt((e.target as HTMLInputElement).value, 10);
+  elRadiusSlider.addEventListener('ionChange', (e: any) => {
+    const r = parseInt(e.target.value, 10);
     gpsEngine.setAlarmRadius(r);
   });
 
@@ -779,37 +779,37 @@ elBtnAnchorSet.addEventListener('click', () => {
   // Settings Tabs: Tab bar clicks + touch swipe
   setupSettingsTabs();
 
-  // J. Sector Alarm Settings Controls
-  elChkSectorEnable.addEventListener('change', (e) => {
-    const checked = (e.target as HTMLInputElement).checked;
+  // J. Sector Alarm Settings Controls (Using Ionic ionChange and ionInput)
+  elChkSectorEnable.addEventListener('ionChange', (e: any) => {
+    const checked = !!e.detail.checked;
     gpsEngine.setUseSectorAlarm(checked);
     toggleSectorSettingsState(checked);
     triggerMapAnchorUpdate();
   });
 
-  elSectorWidthSlider.addEventListener('input', (e) => {
-    const val = parseInt((e.target as HTMLInputElement).value, 10);
+  elSectorWidthSlider.addEventListener('ionInput', (e: any) => {
+    const val = parseInt(e.target.value, 10);
     elSectorWidthVal.innerText = val.toString();
     gpsEngine.setSectorWidth(val);
     triggerMapAnchorUpdate();
   });
 
-  elSectorHeadingSlider.addEventListener('input', (e) => {
-    const val = parseInt((e.target as HTMLInputElement).value, 10);
+  elSectorHeadingSlider.addEventListener('ionInput', (e: any) => {
+    const val = parseInt(e.target.value, 10);
     elSectorHeadingVal.innerText = val.toString();
     gpsEngine.setSectorHeading(val);
     triggerMapAnchorUpdate();
   });
 
-  // K. Track Logs Settings Controls
-  elHistoryLimitSlider.addEventListener('input', (e) => {
-    const val = parseInt((e.target as HTMLInputElement).value, 10);
+  // K. Track Logs Settings Controls (Using Ionic ionInput and ionChange)
+  elHistoryLimitSlider.addEventListener('ionInput', (e: any) => {
+    const val = parseInt(e.target.value, 10);
     elHistoryLimitVal.innerText = val.toString();
     gpsEngine.setHistoryLimitHours(val);
   });
 
-  elSelectDisplayLimit.addEventListener('change', (e) => {
-    const val = parseInt((e.target as HTMLSelectElement).value, 10);
+  elSelectDisplayLimit.addEventListener('ionChange', (e: any) => {
+    const val = parseInt(e.target.value, 10);
     gpsEngine.setDisplayLimitHours(val);
     appMap.drawVesselTrack(
       gpsEngine.getVesselHistory(), 
@@ -819,8 +819,8 @@ elBtnAnchorSet.addEventListener('click', () => {
     );
   });
 
-  elTrackPointSizeSlider.addEventListener('input', (e) => {
-    const val = parseInt((e.target as HTMLInputElement).value, 10);
+  elTrackPointSizeSlider.addEventListener('ionInput', (e: any) => {
+    const val = parseInt(e.target.value, 10);
     elTrackPointSizeVal.innerText = val.toString();
     gpsEngine.setTrackPointSize(val);
     appMap.drawVesselTrack(
@@ -831,8 +831,8 @@ elBtnAnchorSet.addEventListener('click', () => {
     );
   });
 
-  elTrackMinOpacitySlider.addEventListener('input', (e) => {
-    const val = parseInt((e.target as HTMLInputElement).value, 10);
+  elTrackMinOpacitySlider.addEventListener('ionInput', (e: any) => {
+    const val = parseInt(e.target.value, 10);
     elTrackMinOpacityVal.innerText = val.toString();
     gpsEngine.setTrackMinOpacity(val);
     appMap.drawVesselTrack(
@@ -843,8 +843,8 @@ elBtnAnchorSet.addEventListener('click', () => {
     );
   });
 
-  elSelectThemeColor.addEventListener('change', (e) => {
-    const color = (e.target as HTMLSelectElement).value;
+  elSelectThemeColor.addEventListener('ionChange', (e: any) => {
+    const color = e.target.value;
     gpsEngine.setThemeColor(color);
     appMap.setThemeColor(color);
     
@@ -858,14 +858,14 @@ elBtnAnchorSet.addEventListener('click', () => {
     );
   });
 
-  elSelectTrackInterval.addEventListener('change', (e) => {
-    const val = parseInt((e.target as HTMLSelectElement).value, 10);
+  elSelectTrackInterval.addEventListener('ionChange', (e: any) => {
+    const val = parseInt(e.target.value, 10);
     gpsEngine.setTrackIntervalSeconds(val);
   });
 
   // Language manual selection event listener
-  elSelectLanguage.addEventListener('change', (e) => {
-    const lang = (e.target as HTMLSelectElement).value as LanguageCode;
+  elSelectLanguage.addEventListener('ionChange', (e: any) => {
+    const lang = e.target.value as LanguageCode;
     gpsEngine.setLanguage(lang);
     translateDOM(lang);
     
@@ -882,8 +882,8 @@ elBtnAnchorSet.addEventListener('click', () => {
   });
 
   // Anchor lock toggle selection listener
-  elChkLockAnchor.addEventListener('change', (e) => {
-    const checked = (e.target as HTMLInputElement).checked;
+  elChkLockAnchor.addEventListener('ionChange', (e: any) => {
+    const checked = !!e.detail.checked;
     gpsEngine.setLockAnchorAfterSet(checked);
     triggerMapAnchorUpdate();
   });
@@ -904,8 +904,8 @@ elBtnAnchorSet.addEventListener('click', () => {
     }
   });
 
-  elSelectLengthUnit.addEventListener('change', (e) => {
-    const unit = (e.target as HTMLSelectElement).value as 'm' | 'ft';
+  elSelectLengthUnit.addEventListener('ionChange', (e: any) => {
+    const unit = e.target.value as 'm' | 'ft';
     gpsEngine.setLengthUnit(unit);
     // Sync radius widget boundaries and readout to new unit
     const minR = unit === 'ft' ? 15 : 5;
