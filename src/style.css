@@ -1312,14 +1312,32 @@ input:checked + .toggle-slider:before {
   margin-top: 4px;
 }
 
-/* Desktop Adaptive Media Queries */
+/* Desktop & Tablet Adaptive Media Queries */
 @media (min-width: 768px) {
-  .sim-panel {
-    top: 60px;
-    right: 24px;
+  /* Center the inner contents of the top header bar perfectly aligned with the bottom panel */
+  .app-header {
+    padding: 0 calc((100% - 720px) / 2);
   }
   
-  /* Desktop settings dialog style */
+  /* Constrain bottom control panel widgets to a centered 720px width */
+  .stats-bar,
+  .scope-bar-wrapper,
+  .radius-controller,
+  .sector-main-controls,
+  .anchor-adjuster-panel,
+  .action-buttons,
+  .utilities {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .sim-panel {
+    top: 60px;
+    right: calc((100% - 720px) / 2); /* Align simulator panel right next to centered content edge */
+  }
+  
+  /* Desktop/Tablet settings dialog style */
   .settings-panel {
     bottom: unset;
     top: 50%;
