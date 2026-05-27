@@ -74,7 +74,7 @@ jobs:
 
           # Set repo name, description, and metadata details in config.yml
           sed -i 's/First F-Droid Repo Demo/OpenAnchor Official Repository/g' config.yml
-          sed -i 's/My first F-Droid repository/Official F-Droid repository for the OpenAnchor boat alarm app/g' config.yml
+          sed -i 's|My first F-Droid repository|Official F-Droid repository for the OpenAnchor boat alarm app. Source code and documentation are hosted on GitHub: <a href="https://github.com/gzahl/OpenAnchor">https://github.com/gzahl/OpenAnchor</a>.|g' config.yml
 
           # Place custom repository icons and logos
           mkdir -p repo/icons
