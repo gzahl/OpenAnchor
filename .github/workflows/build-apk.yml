@@ -66,6 +66,10 @@ jobs:
           # Create a clean build directory for fdroid
           mkdir -p fdroid-build/repo fdroid-build/metadata
           cp apk/openanchor.apk fdroid-build/repo/
+          
+          # Copy the custom app metadata file so F-Droid embeds detailed descriptions, links, and licenses
+          cp metadata/org.openanchor.alarm.yml fdroid-build/metadata/
+          
           cd fdroid-build
 
           # Initialize repo config (uses separate keystore for repo index signing)
@@ -75,15 +79,17 @@ jobs:
             --repo-keyalias fdroid-repo \
             --no-prompt
 
-          # Set repo name, description, and metadata details in config.yml
-          sed -i 's/First F-Droid Repo Demo/OpenAnchor Official Repository/g' config.yml
-          sed -i 's|My first F-Droid repository|Official F-Droid repository for the OpenAnchor boat alarm app. Source code and documentation are hosted on GitHub: <a href="https://github.com/gzahl/OpenAnchor">https://github.com/gzahl/OpenAnchor</a>.|g' config.yml
+          # Robustly overwrite repo name and description in config.yml (handles any default string template)
+          sed -i 's/^repo_name:.*/repo_name: "OpenAnchor Official Repository"/g' config.yml
+          sed -i 's|^repo_description:.*|repo_description: "Official F-Droid repository for the OpenAnchor boat alarm app. Source code is hosted on GitHub: https://github.com/gzahl/OpenAnchor"|g' config.yml
 
-          # Place custom repository icons and logos
+          # Place custom repository icons
           mkdir -p repo/icons
+          # Copy standard fallback icons
           cp ../public/fdroid-icon.png repo/icons/icon.png
           cp ../public/fdroid-icon.png repo/icons/icon-64.png
-          cp ../public/fdroid-icon.png repo/logo.png
+          # Copy package-specific icon so F-Droid client displays it for the app
+          cp ../public/fdroid-icon.png repo/icons/org.openanchor.alarm.png
 
           # Generate index (creates repo signing key in repo.keystore)
           fdroid update --create-key --use-date-from-apk --create-metadata
@@ -99,6 +105,8 @@ jobs:
           mkdir -p pages/fdroid
           # Copy the entire F-Droid repo folder recursively (includes index-v1.jar, index-v2.json, APKs, icons, etc.)
           cp -r fdroid-build/repo pages/fdroid/
+          # Place the repository logo in the parent directory of the repo folder to prevent it from being parsed as a ghost app
+          cp public/fdroid-icon.png pages/fdroid/logo.png
           # Create landing page
           REPO_URL="https://gzahl.github.io/OpenAnchor/fdroid/repo"
           QR_URL="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=$REPO_URL"

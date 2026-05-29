@@ -1,0 +1,17 @@
+Categories:
+  - Navigation
+  - Sports
+License: MIT
+AuthorName: gzahl
+SourceCode: https://github.com/gzahl/OpenAnchor
+IssueTracker: https://github.com/gzahl/OpenAnchor/issues
+Summary: Free and open-source boat anchor alarm app
+Description: |-
+  OpenAnchor is a free and open-source boat anchor alarm app that helps you sleep peacefully while anchored. It tracks your boat's position, sounds an aggressive siren, and flashes a strobe warning if your boat drags or moves outside the safe radius.
+  
+  Key Features:
+  - Adjustable alarm radius with tactile control buttons or direct numeric input.
+  - Interactive offline-capable map with seamap, topo, satellite, and dark layers.
+  - Sector alarm with adjustable width and heading to define safety zones.
+  - Yacht simulator mode for Schwoj (swinging) and Drift tests.
+  - Multi-language support.
