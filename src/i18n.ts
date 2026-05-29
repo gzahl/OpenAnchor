@@ -1251,28 +1251,28 @@ export function translateDOM(lang: LanguageCode): void {
   });
 
   // Handle placeholders or element specific attributes if needed
-  const selectFilter = document.getElementById('select-display-limit') as HTMLSelectElement;
+  const selectFilter = document.getElementById('select-display-limit');
   if (selectFilter) {
-    const options = selectFilter.options;
+    const options = selectFilter.querySelectorAll('ion-select-option');
     if (options.length >= 5) {
-      options[0].text = t('opt_1h', lang);
-      options[1].text = t('opt_3h', lang);
-      options[2].text = t('opt_6h', lang);
-      options[3].text = t('opt_12h', lang);
-      options[4].text = t('opt_24h', lang);
+      options[0].innerHTML = t('opt_1h', lang);
+      options[1].innerHTML = t('opt_3h', lang);
+      options[2].innerHTML = t('opt_6h', lang);
+      options[3].innerHTML = t('opt_12h', lang);
+      options[4].innerHTML = t('opt_24h', lang);
     }
   }
 
-  const selectInterval = document.getElementById('select-track-interval') as HTMLSelectElement;
+  const selectInterval = document.getElementById('select-track-interval');
   if (selectInterval) {
-    const options = selectInterval.options;
+    const options = selectInterval.querySelectorAll('ion-select-option');
     if (options.length >= 6) {
-      options[0].text = t('opt_5s', lang);
-      options[1].text = t('opt_10s', lang);
-      options[2].text = t('opt_30s', lang);
-      options[3].text = t('opt_60s', lang);
-      options[4].text = t('opt_120s', lang);
-      options[5].text = t('opt_300s', lang);
+      options[0].innerHTML = t('opt_5s', lang);
+      options[1].innerHTML = t('opt_10s', lang);
+      options[2].innerHTML = t('opt_30s', lang);
+      options[3].innerHTML = t('opt_60s', lang);
+      options[4].innerHTML = t('opt_120s', lang);
+      options[5].innerHTML = t('opt_300s', lang);
     }
   }
 }

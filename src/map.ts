@@ -94,6 +94,15 @@ export class OpenAnchorMap {
   }
 
   /**
+   * Refreshes the Leaflet map size calculation, preventing rendering glitch in custom containers
+   */
+  public invalidateSize(): void {
+    if (this.map) {
+      this.map.invalidateSize();
+    }
+  }
+
+  /**
    * Handle setting or moving anchor via map clicking
    */
   private handleMapInteraction(lat: number, lng: number): void {
@@ -442,15 +451,6 @@ export class OpenAnchorMap {
         direction: 'center',
         className: 'scope-tooltip'
       }).openTooltip();
-    }
-  }
-
-  /**
-   * Make Leaflet resize correctly if app window changes
-   */
-  public invalidateSize(): void {
-    if (this.map) {
-      this.map.invalidateSize();
     }
   }
 

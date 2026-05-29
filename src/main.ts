@@ -89,8 +89,8 @@ const elBtnAnchorageToggle = document.getElementById('btn-anchorage-toggle') as 
 
 // Settings Tab Elements
 const elTabBtns = document.querySelectorAll('.settings-tab') as any;
-const elTabsTrack = document.getElementById('settings-tabs-track') as HTMLDivElement;
-const elTabsViewport = document.getElementById('settings-tabs-viewport') as HTMLDivElement;
+const elTabsTrack = document.querySelector('.settings-tabs-track') as HTMLDivElement;
+const elTabsViewport = document.querySelector('.settings-tabs-viewport') as HTMLDivElement;
 
 /* ==========================================================================
    1. Initialize Map & GPS Bindings
@@ -102,7 +102,7 @@ function initApp() {
 
   // Load language settings & run initial DOM translation
   const savedLang = gpsEngine.getLanguage();
-  elSelectLanguage.value = savedLang;
+  if (elSelectLanguage) elSelectLanguage.value = savedLang;
   translateDOM(savedLang);
 
   // Ensure no anchor is set when the app starts
@@ -157,47 +157,47 @@ function initApp() {
   setupEventListeners();
 
   // Load initial radius settings in slider and text input
-  elRadiusSlider.value = radius.toString();
-  elRadiusValInput.value = radius.toString();
+  if (elRadiusSlider) elRadiusSlider.value = radius.toString();
+  if (elRadiusValInput) elRadiusValInput.value = radius.toString();
 
   // Load initial advanced settings fields
-  elChkSectorEnable.checked = gpsEngine.getUseSectorAlarm();
+  if (elChkSectorEnable) elChkSectorEnable.checked = gpsEngine.getUseSectorAlarm();
   toggleSectorSettingsState(gpsEngine.getUseSectorAlarm());
   
   const sWidth = gpsEngine.getSectorWidth();
-  elSectorWidthSlider.value = sWidth.toString();
-  elSectorWidthVal.innerText = sWidth.toString();
+  if (elSectorWidthSlider) elSectorWidthSlider.value = sWidth.toString();
+  if (elSectorWidthVal) elSectorWidthVal.innerText = sWidth.toString();
 
   const sHeading = gpsEngine.getSectorHeading();
-  elSectorHeadingSlider.value = sHeading.toString();
-  elSectorHeadingVal.innerText = sHeading.toString();
+  if (elSectorHeadingSlider) elSectorHeadingSlider.value = sHeading.toString();
+  if (elSectorHeadingVal) elSectorHeadingVal.innerText = sHeading.toString();
 
   const hLimit = gpsEngine.getHistoryLimitHours();
-  elHistoryLimitSlider.value = hLimit.toString();
-  elHistoryLimitVal.innerText = hLimit.toString();
+  if (elHistoryLimitSlider) elHistoryLimitSlider.value = hLimit.toString();
+  if (elHistoryLimitVal) elHistoryLimitVal.innerText = hLimit.toString();
 
   const dLimit = gpsEngine.getDisplayLimitHours();
-  elSelectDisplayLimit.value = dLimit.toString();
+  if (elSelectDisplayLimit) elSelectDisplayLimit.value = dLimit.toString();
 
   const pSize = gpsEngine.getTrackPointSize();
-  elTrackPointSizeSlider.value = pSize.toString();
-  elTrackPointSizeVal.innerText = pSize.toString();
+  if (elTrackPointSizeSlider) elTrackPointSizeSlider.value = pSize.toString();
+  if (elTrackPointSizeVal) elTrackPointSizeVal.innerText = pSize.toString();
 
   const mOpacity = gpsEngine.getTrackMinOpacity();
-  elTrackMinOpacitySlider.value = mOpacity.toString();
-  elTrackMinOpacityVal.innerText = mOpacity.toString();
+  if (elTrackMinOpacitySlider) elTrackMinOpacitySlider.value = mOpacity.toString();
+  if (elTrackMinOpacityVal) elTrackMinOpacityVal.innerText = mOpacity.toString();
 
   // Load anchor lock toggle
-  elChkLockAnchor.checked = gpsEngine.getLockAnchorAfterSet();
+  if (elChkLockAnchor) elChkLockAnchor.checked = gpsEngine.getLockAnchorAfterSet();
 
   // Load and apply theme color
   const themeColor = gpsEngine.getThemeColor();
-  elSelectThemeColor.value = themeColor;
+  if (elSelectThemeColor) elSelectThemeColor.value = themeColor;
   appMap.setThemeColor(themeColor);
 
   // Load and apply logging tracking interval
   const trackInterval = gpsEngine.getTrackIntervalSeconds();
-  elSelectTrackInterval.value = trackInterval.toString();
+  if (elSelectTrackInterval) elSelectTrackInterval.value = trackInterval.toString();
 
   // Try to acquire initial GPS lock
   gpsEngine.startTracking();
@@ -226,12 +226,16 @@ function handlePositionUpdate(pos: GPSPosition): void {
 
   // 4. Update Digital Instruments
   // Speed (converted to knots)
-  const speedKnots = GPSEngine.mpsToKnots(pos.speed);
-  elSpeedVal.innerHTML = `${speedKnots.toFixed(1)} <span class="unit-sub">kn</span>`;
+  if (elSpeedVal) {
+    const speedKnots = GPSEngine.mpsToKnots(pos.speed);
+    elSpeedVal.innerHTML = `${speedKnots.toFixed(1)} <span class="unit-sub">kn</span>`;
+  }
 
   // Heading (COG)
-  const headingStr = pos.heading !== null ? `${Math.round(pos.heading)}°` : '---°';
-  elCogVal.innerText = headingStr;
+  if (elCogVal) {
+    const headingStr = pos.heading !== null ? `${Math.round(pos.heading)}°` : '---°';
+    elCogVal.innerText = headingStr;
+  }
 
   // GPS Accuracy
   elAccuracyVal.innerHTML = `&plusmn;${pos.accuracy.toFixed(1)} <span class="unit-sub">m</span>`;
@@ -379,6 +383,7 @@ function updateAlarmStatusUI(state: AlarmState): void {
 }
 
 function enableArmingButton(enable: boolean): void {
+  if (!elBtnAlarmArm) return;
   if (enable) {
     elBtnAlarmArm.classList.remove('btn-disabled');
     elBtnAlarmArm.removeAttribute('disabled');
@@ -391,6 +396,7 @@ function enableArmingButton(enable: boolean): void {
 function enableAnchorTuningButtons(enable: boolean): void {
   const btns = [elPadN, elPadS, elPadE, elPadW];
   btns.forEach(btn => {
+    if (!btn) return;
     if (enable) {
       btn.classList.remove('btn-disabled');
       btn.removeAttribute('disabled');
@@ -403,13 +409,13 @@ function enableAnchorTuningButtons(enable: boolean): void {
 
 function toggleSectorSettingsState(active: boolean): void {
   if (active) {
-    elSectorSettingsControls.classList.remove('hidden');
-    elSectorWidthSlider.removeAttribute('disabled');
-    elSectorHeadingSlider.removeAttribute('disabled');
+    if (elSectorSettingsControls) elSectorSettingsControls.classList.remove('hidden');
+    if (elSectorWidthSlider) elSectorWidthSlider.removeAttribute('disabled');
+    if (elSectorHeadingSlider) elSectorHeadingSlider.removeAttribute('disabled');
   } else {
-    elSectorSettingsControls.classList.add('hidden');
-    elSectorWidthSlider.setAttribute('disabled', 'true');
-    elSectorHeadingSlider.setAttribute('disabled', 'true');
+    if (elSectorSettingsControls) elSectorSettingsControls.classList.add('hidden');
+    if (elSectorWidthSlider) elSectorWidthSlider.setAttribute('disabled', 'true');
+    if (elSectorHeadingSlider) elSectorHeadingSlider.setAttribute('disabled', 'true');
   }
 }
 
@@ -472,8 +478,8 @@ function setupEventListeners(): void {
   elRadiusPlus1.addEventListener('click', () => stepRadius(1));
   elRadiusPlus10.addEventListener('click', () => stepRadius(10));
 
-  // Cardinal direction shifting buttons (Steuerkreuz Feinjustierung)
   const bindPadBtn = (btn: HTMLButtonElement, dir: 'N' | 'S' | 'E' | 'W') => {
+    if (!btn) return;
     btn.addEventListener('click', () => {
       audioSynth.unlock();
       gpsEngine.shiftAnchor(dir, 1); // shift exactly 1 meter
@@ -642,8 +648,12 @@ elBtnAnchorSet.addEventListener('click', () => {
   // E. Map Layer Buttons Selector
   elMapLayerBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      elMapLayerBtns.forEach(b => b.classList.remove('active'));
+      elMapLayerBtns.forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('fill', 'outline');
+      });
       btn.classList.add('active');
+      btn.setAttribute('fill', 'solid');
       const layer = btn.getAttribute('data-layer') as 'seamap' | 'topo' | 'satellite' | 'dark';
       appMap.setLayer(layer);
     });
@@ -924,6 +934,10 @@ elBtnAnchorSet.addEventListener('click', () => {
      Settings Tab switching + touch/pointer swipe support
      ----------------------------------------------------------------------- */
   function setupSettingsTabs() {
+    if (!elTabsTrack || !elTabsViewport) {
+      console.warn("OpenAnchor: Settings tab elements not found in DOM yet.");
+      return;
+    }
     const tabCount = elTabBtns.length; // 3
     let activeTabIndex = 0;
 
@@ -1025,6 +1039,29 @@ function updateSimModeButtons(): void {
 
 window.addEventListener('DOMContentLoaded', () => {
   initApp();
+  
+  // Staggered Leaflet map size invalidation to resolve Ionic asynchronous rendering size calculation glitch
+  const triggerInvalidate = () => {
+    if (appMap) {
+      appMap.invalidateSize();
+    }
+  };
+
+  triggerInvalidate();
+  setTimeout(triggerInvalidate, 100);
+  setTimeout(triggerInvalidate, 350);
+  setTimeout(triggerInvalidate, 800);
+  setTimeout(triggerInvalidate, 1800);
+
+  // Invalidate when ion-content is fully defined/upgraded
+  if (window.customElements && typeof window.customElements.whenDefined === 'function') {
+    window.customElements.whenDefined('ion-content').then(() => {
+      setTimeout(triggerInvalidate, 200);
+    });
+  }
+
+  // Handle screen rotation/resizes
+  window.addEventListener('resize', triggerInvalidate);
   
   // Register Service Worker for offline PWA operation
   if ('serviceWorker' in navigator) {

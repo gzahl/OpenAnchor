@@ -71,8 +71,8 @@
                 <!-- Units -->
                 <div class="settings-group" style="margin-bottom: 16px;">
                   <ion-select id="select-length-unit" value="m" label="Maßeinheiten" label-placement="stacked" style="background: #131d32; border: 1px solid #1b2a47; border-radius: 4px; --padding-start: 10px; --padding-end: 10px; height: 42px;">
-                    <option value="m" data-i18n="unit_meters">Meter (m)</option>
-                    <option value="ft" data-i18n="unit_feet">Feet / Fuß (ft)</option>
+                    <ion-select-option value="m" data-i18n="unit_meters">Meter (m)</ion-select-option>
+                    <ion-select-option value="ft" data-i18n="unit_feet">Feet / Fuß (ft)</ion-select-option>
                   </ion-select>
                 </div>
 
@@ -181,15 +181,24 @@
               </div>
             </ion-buttons>
 
-            <!-- Compact Status Badges in Toolbar Center -->
-            <div class="status-indicators" style="display: flex; gap: 8px; align-items: center; justify-content: center; height: 100%;">
-              <div id="status-gps" class="indicator gps-waiting">
-                <span class="dot"></span>
-                <span class="text" data-i18n="gps_searching">GPS SUCHE</span>
+            <!-- Compact Telemetry in Toolbar Center -->
+            <div class="header-telemetry" style="display: flex; gap: 8px; align-items: center; justify-content: center; height: 100%;">
+              <!-- Distance Badge -->
+              <div class="header-stat" style="display: flex; align-items: center; gap: 4px; background: rgba(0, 0, 0, 0.12); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border-glass);">
+                <span style="font-size: 0.58rem; color: var(--text-muted); font-weight: 700; letter-spacing: 0.3px;" data-i18n="scope_dist">ENTFERNUNG</span>
+                <span id="dist-val" class="digital-value" style="font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; color: var(--neon-blue);">--.-</span>
+                <span class="header-stat-unit" style="font-size: 0.58rem; color: var(--text-muted); font-weight: 700;" data-i18n="meters">M</span>
               </div>
-              <div id="status-alarm" class="indicator alarm-disarmed">
-                <span class="dot"></span>
-                <span class="text" data-i18n="status_inactive">INAKTIV</span>
+              <!-- GPS Accuracy / Status Badge (doubles as status-gps) -->
+              <div id="status-gps" class="indicator gps-waiting header-stat" style="display: flex; align-items: center; gap: 4px; background: rgba(0, 0, 0, 0.12); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border-glass);">
+                <span class="dot" style="width: 5px; height: 5px; border-radius: 50%; display: inline-block;"></span>
+                <span class="text" style="font-size: 0.58rem; color: var(--text-muted); font-weight: 700;" data-i18n="gps_searching">GPS SUCHE</span>
+                <span id="accuracy-val" class="digital-value" style="font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; color: var(--neon-orange);">±--</span>
+              </div>
+              <!-- Alarm Armed Status -->
+              <div id="status-alarm" class="indicator alarm-disarmed" style="display: flex; align-items: center; gap: 4px; background: rgba(0, 0, 0, 0.12); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border-glass);">
+                <span class="dot" style="width: 5px; height: 5px; border-radius: 50%; display: inline-block;"></span>
+                <span class="text" style="font-size: 0.58rem; color: var(--text-muted); font-weight: 700;" data-i18n="status_inactive">INAKTIV</span>
               </div>
             </div>
 
@@ -260,7 +269,7 @@
           </div>
 
           <!-- Leaflet Map Container -->
-          <div id="map" style="width: 100%; height: 100%;"></div>
+          <div id="map" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0;"></div>
         </ion-content>
 
         <!-- Bottom Control Footer -->
@@ -268,29 +277,8 @@
           <ion-toolbar color="dark" style="--background: #050b14; padding: 0;">
             <div class="control-panel" style="padding: 0; background: transparent; border: none; box-shadow: none;">
               
-              <!-- Monospaced Telemetry Bar -->
-              <div class="stats-bar" style="border-top: none;">
-                <div class="stat-item">
-                  <span class="stat-label" data-i18n="scope_dist">ENTFERNUNG</span>
-                  <span id="dist-val" class="digital-value">--.-</span>
-                  <span class="stat-unit" data-i18n="meters">METER</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-label" data-i18n="speed">SOG</span>
-                  <span id="speed-val" class="digital-value">0.0 <span class="stat-unit-sub">kn</span></span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-label" data-i18n="cog">COG</span>
-                  <span id="cog-val" class="digital-value">---°</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-label" data-i18n="gps_accuracy">GPS ACC</span>
-                  <span id="accuracy-val" class="digital-value">±-- <span class="stat-unit-sub">m</span></span>
-                </div>
-              </div>
-
               <!-- Sleek Mini Scope Progress Bar Directly Under Telemetry -->
-              <div class="scope-bar-wrapper">
+              <div class="scope-bar-wrapper" style="margin-top: 4px; margin-bottom: 2px;">
                 <div id="scope-progress" class="scope-progress-bar"></div>
               </div>
 
@@ -384,10 +372,10 @@
                 <!-- Map Layer Selectors -->
                 <div class="control-row utilities" style="margin-top: 6px; margin-bottom: 2px;">
                   <div class="map-selector" style="display: flex; width: 100%; gap: 4px;">
-                    <ion-button class="map-layer-btn active" data-layer="seamap" fill="solid" color="dark" style="flex-grow: 1; font-weight: 600; font-size: 0.7rem; height: 28px;">SEAMAP</ion-button>
-                    <ion-button class="map-layer-btn" data-layer="topo" fill="outline" color="dark" style="flex-grow: 1; font-weight: 600; font-size: 0.7rem; height: 28px;">TOPO</ion-button>
-                    <ion-button class="map-layer-btn" data-layer="satellite" fill="outline" color="dark" style="flex-grow: 1; font-weight: 600; font-size: 0.7rem; height: 28px;">SAT</ion-button>
-                    <ion-button class="map-layer-btn" data-layer="dark" fill="outline" color="dark" style="flex-grow: 1; font-weight: 600; font-size: 0.7rem; height: 28px;">DARK</ion-button>
+                    <ion-button class="map-layer-btn active" data-layer="seamap" fill="solid" color="primary" style="flex-grow: 1; font-weight: 600; font-size: 0.7rem; height: 28px;">SEAMAP</ion-button>
+                    <ion-button class="map-layer-btn" data-layer="topo" fill="outline" color="primary" style="flex-grow: 1; font-weight: 600; font-size: 0.7rem; height: 28px;">TOPO</ion-button>
+                    <ion-button class="map-layer-btn" data-layer="satellite" fill="outline" color="primary" style="flex-grow: 1; font-weight: 600; font-size: 0.7rem; height: 28px;">SAT</ion-button>
+                    <ion-button class="map-layer-btn" data-layer="dark" fill="outline" color="primary" style="flex-grow: 1; font-weight: 600; font-size: 0.7rem; height: 28px;">DARK</ion-button>
                   </div>
                 </div>
 

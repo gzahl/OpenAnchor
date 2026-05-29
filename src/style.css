@@ -9,35 +9,71 @@
 
 /* 1. Global Reset & Variables */
 :root {
-  /* Ionic Variables overrides */
-  --ion-background-color: #050b14;
-  --ion-text-color: #f8fafc;
-  --ion-font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --ion-color-primary: #ff3366;
-  --ion-color-primary-rgb: 255, 51, 102;
-  --ion-color-secondary: #10b981;
-  --ion-color-dark: #0b1325;
-  --ion-border-color: #1b2a47;
+  /* Standard Ionic Color Scheme Defaults */
+  --ion-color-primary: #3880ff;
+  --ion-color-primary-rgb: 56, 128, 255;
+  --ion-color-secondary: #3dc2ff;
+  --ion-color-secondary-rgb: 61, 194, 255;
+  --ion-color-tertiary: #5260ff;
+  --ion-color-tertiary-rgb: 82, 96, 255;
+  --ion-color-success: #2dd36f;
+  --ion-color-success-rgb: 45, 211, 111;
+  --ion-color-warning: #ffc409;
+  --ion-color-warning-rgb: 255, 196, 9;
+  --ion-color-danger: #eb445a;
+  --ion-color-danger-rgb: 235, 68, 90;
+  --ion-color-dark: #222428;
+  --ion-color-dark-rgb: 34, 36, 40;
+  --ion-color-medium: #92949c;
+  --ion-color-medium-rgb: 146, 148, 156;
+  --ion-color-light: #f4f5f8;
+  --ion-color-light-rgb: 244, 245, 248;
 
-  /* Colors - Flat Solid Marine Navy Theme */
-  --bg-deep: #050b14;
-  --bg-glass: #0b1325;
-  --border-glass: #1b2a47;
-  --border-neon-dim: #00b4d8;
+  /* App elements background and border mapped to Ionic standard light defaults */
+  --bg-deep: #f4f5f8;
+  --bg-glass: #ffffff;
+  --border-glass: #e0e0e0;
+  --border-neon-dim: #3dc2ff;
   
-  --neon-blue: #0ea5e9;
-  --neon-green: #10b981;
-  --neon-orange: #f59e0b;
-  --neon-red: #ef4444;
-  --text-muted: #64748b;
-  --text-bright: #f8fafc;
+  --neon-blue: #3880ff;
+  --neon-green: #2dd36f;
+  --neon-orange: #ffc409;
+  --neon-red: #eb445a;
+  --text-muted: #6b7280;
+  --text-bright: #1f2937;
 
   /* Typography */
-  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: 'Share Tech Mono', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   font-size: 16px;
-  color-scheme: dark;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Standard Ionic Dark Theme overrides */
+    --ion-color-primary: #428cff;
+    --ion-color-primary-rgb: 66, 140, 255;
+    
+    --bg-deep: #121212;
+    --bg-glass: #1e1e1e;
+    --border-glass: #2d2d2d;
+    --border-neon-dim: #3dc2ff;
+    
+    --neon-blue: #428cff;
+    --neon-green: #2fdf75;
+    --neon-orange: #ffd53f;
+    --neon-red: #ff4961;
+    --text-muted: #989aa2;
+    --text-bright: #ffffff;
+    
+    --ion-background-color: #121212;
+    --ion-text-color: #ffffff;
+    --ion-border-color: #2d2d2d;
+    
+    color-scheme: dark;
+  }
 }
 
 *, *::before, *::after {
@@ -68,10 +104,11 @@ body, html {
 
 /* 3. Leaflet Map Customizations */
 #map {
-  flex: 1;
-  width: 100%;
-  height: 100%;
-  position: relative;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 1;
   background-color: var(--bg-deep);
 }
@@ -508,7 +545,7 @@ input[type="range"]::-webkit-slider-thumb:active {
 
 .btn-primary {
   background: var(--neon-blue);
-  color: #050b14;
+  color: #ffffff;
   flex-grow: 1.3;
 }
 
@@ -736,7 +773,7 @@ input[type="range"]::-webkit-slider-thumb:active {
 
 .sim-badge {
   background-color: var(--neon-orange);
-  color: #050b14;
+  color: #000000;
   font-size: 0.5rem;
   font-weight: 800;
   padding: 1px 4px;

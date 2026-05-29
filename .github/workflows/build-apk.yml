@@ -32,6 +32,9 @@ jobs:
       - name: Build web app
         run: npm run build
 
+      - name: Run E2E Integration Tests
+        run: npm test
+
       - name: Sync Capacitor
         run: npx cap sync android
 
