@@ -31,13 +31,13 @@
           <!-- Tabs (Segmented control) -->
           <ion-segment value="general" id="settings-segment" style="margin-bottom: 15px;">
             <ion-segment-button value="general" class="settings-tab active" id="tab-btn-general">
-              <ion-label data-i18n="tab_general">Allgemein</ion-label>
+              <span data-i18n="tab_general">Allgemein</span>
             </ion-segment-button>
             <ion-segment-button value="design" class="settings-tab" id="tab-btn-design">
-              <ion-label data-i18n="tab_design">Design</ion-label>
+              <span data-i18n="tab_design">Design</span>
             </ion-segment-button>
             <ion-segment-button value="tracks" class="settings-tab" id="tab-btn-tracks">
-              <ion-label data-i18n="tab_tracks">Track</ion-label>
+              <span data-i18n="tab_tracks">Track</span>
             </ion-segment-button>
           </ion-segment>
 
@@ -86,7 +86,7 @@
               </div>
 
               <!-- TAB 2: Design -->
-              <div class="settings-tab-panel hidden" id="tab-panel-design">
+              <div class="settings-tab-panel" id="tab-panel-design">
                 <div class="settings-group" style="margin-bottom: 16px;">
                   <label class="settings-label-bold" data-i18n="settings_design" style="display: block; margin-bottom: 4px;">Design &amp; Farben</label>
                   <p class="settings-subtext font-small" style="margin-bottom: 12px; color: #8c9bb4; font-size: 0.8rem;" data-i18n="settings_design_sub">Wähle eine einheitliche Leuchtfarbe für den Anker, die Sicherheitszonen und deine Schiffs-Trackpunkte.</p>
@@ -101,7 +101,7 @@
               </div>
 
               <!-- TAB 3: Tracks -->
-              <div class="settings-tab-panel hidden" id="tab-panel-tracks">
+              <div class="settings-tab-panel" id="tab-panel-tracks">
                 <div class="settings-group" style="margin-bottom: 16px;">
                   <label class="settings-label-bold" data-i18n="settings_track_header" style="display: block; margin-bottom: 4px;">Schiffs-Trackaufzeichnung</label>
                   <p class="settings-subtext font-small" style="margin-bottom: 12px; color: #8c9bb4; font-size: 0.8rem;" data-i18n="settings_track_sub">Zeichnet die Bewegung der Yacht auf der Seekarte auf, um Swing-Rhythmen oder Slippen des Ankers zu erkennen.</p>

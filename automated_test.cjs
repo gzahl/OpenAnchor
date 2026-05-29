@@ -106,6 +106,142 @@ async function run() {
     await new Promise(r => setTimeout(r, 1000));
     console.log("✅ SUCCESS: Sound Test Button click interaction tested successfully.");
 
+    // 5.5. Test the settings menu and tabs (new settings tests)
+    console.log("5.5. Testing settings menu opening, tab texts, panel visibility, sliding transitions, and closing...");
+    
+    // Click Settings Button to open settings
+    console.log("  - Clicking settings button to open settings menu...");
+    await page.click('#btn-settings');
+    await new Promise(r => setTimeout(r, 1000)); // Wait for menu slide-in animation
+
+    // Validate that settings menu is open
+    const isMenuOpen = await page.evaluate(async () => {
+      const menu = document.getElementById('settings-menu');
+      if (!menu) return false;
+      return typeof menu.isOpen === 'function' ? await menu.isOpen() : true;
+    });
+
+    if (isMenuOpen) {
+      console.log("  ✅ SUCCESS: Settings Menu opened successfully.");
+    } else {
+      console.error("  ❌ FAILURE: Settings Menu did not report as open.");
+      exitCode = 1;
+    }
+
+    // Verify settings tab text labels exist and are populated
+    const tabTexts = await page.evaluate(() => {
+      const texts = {};
+      const tabGeneral = document.querySelector('#tab-btn-general span');
+      const tabDesign = document.querySelector('#tab-btn-design span');
+      const tabTracks = document.querySelector('#tab-btn-tracks span');
+      
+      texts.general = tabGeneral ? tabGeneral.textContent.trim() : null;
+      texts.design = tabDesign ? tabDesign.textContent.trim() : null;
+      texts.tracks = tabTracks ? tabTracks.textContent.trim() : null;
+      return texts;
+    });
+
+    console.log("  - Settings Tab labels found:", JSON.stringify(tabTexts));
+    
+    if (tabTexts.general && tabTexts.design && tabTexts.tracks) {
+      console.log("  ✅ SUCCESS: Settings Tab labels are non-empty and visible: " + JSON.stringify(tabTexts));
+    } else {
+      console.error("  ❌ FAILURE: Settings Tab labels are empty or missing: " + JSON.stringify(tabTexts));
+      exitCode = 1;
+    }
+
+    // Helper to evaluate panel visibility
+    const checkPanelVisibility = async (panelId) => {
+      return await page.evaluate((id) => {
+        const panel = document.getElementById(id);
+        const viewport = document.querySelector('.settings-tabs-viewport');
+        if (!panel || !viewport) return { exists: false };
+        
+        const pRect = panel.getBoundingClientRect();
+        const vRect = viewport.getBoundingClientRect();
+        
+        // Check if panel display is block/flex (not display: none) and lies horizontally within the viewport coordinates
+        const isDisplayNone = window.getComputedStyle(panel).display === 'none';
+        const isHorizontallyInViewport = (pRect.left >= vRect.left - 5 && pRect.right <= vRect.right + 5);
+        
+        return {
+          exists: true,
+          display: window.getComputedStyle(panel).display,
+          isDisplayNone,
+          isHorizontallyInViewport,
+          width: pRect.width,
+          height: pRect.height
+        };
+      }, panelId);
+    };
+
+    // Verify Tab 1 (General) panel is initially visible and in viewport
+    const panelGeneralStatus = await checkPanelVisibility('tab-panel-general');
+    console.log("  - Tab 1 (General) panel status:", JSON.stringify(panelGeneralStatus));
+    if (panelGeneralStatus.exists && !panelGeneralStatus.isDisplayNone && panelGeneralStatus.isHorizontallyInViewport) {
+      console.log("  ✅ SUCCESS: General panel is laid out and visible in settings viewport.");
+    } else {
+      console.error("  ❌ FAILURE: General panel is not visible or has wrong layout.");
+      exitCode = 1;
+    }
+
+    // Click Tab 2 (Design) and verify slide transition
+    console.log("  - Clicking Design tab...");
+    await page.click('#tab-btn-design');
+    await new Promise(r => setTimeout(r, 800)); // wait for slide animation
+    
+    const panelDesignStatus = await checkPanelVisibility('tab-panel-design');
+    console.log("  - Tab 2 (Design) panel status:", JSON.stringify(panelDesignStatus));
+    if (panelDesignStatus.exists && !panelDesignStatus.isDisplayNone && panelDesignStatus.isHorizontallyInViewport) {
+      console.log("  ✅ SUCCESS: Design settings panel slid in and is now visible.");
+    } else {
+      console.error("  ❌ FAILURE: Design settings panel did not slide in or is not visible.");
+      exitCode = 1;
+    }
+
+    // Click Tab 3 (Tracks) and verify slide transition
+    console.log("  - Clicking Track tab...");
+    await page.click('#tab-btn-tracks');
+    await new Promise(r => setTimeout(r, 800)); // wait for slide animation
+
+    const panelTracksStatus = await checkPanelVisibility('tab-panel-tracks');
+    console.log("  - Tab 3 (Track) panel status:", JSON.stringify(panelTracksStatus));
+    if (panelTracksStatus.exists && !panelTracksStatus.isDisplayNone && panelTracksStatus.isHorizontallyInViewport) {
+      console.log("  ✅ SUCCESS: Tracks settings panel slid in and is now visible.");
+    } else {
+      console.error("  ❌ FAILURE: Tracks settings panel did not slide in or is not visible.");
+      exitCode = 1;
+    }
+
+    // Click back to Tab 1 (General)
+    console.log("  - Clicking General tab to return...");
+    await page.click('#tab-btn-general');
+    await new Promise(r => setTimeout(r, 800));
+    const panelGeneralReturnStatus = await checkPanelVisibility('tab-panel-general');
+    if (panelGeneralReturnStatus.isHorizontallyInViewport) {
+      console.log("  ✅ SUCCESS: Successfully navigated back to General settings panel.");
+    } else {
+      console.error("  ❌ FAILURE: General settings panel did not return to viewport.");
+      exitCode = 1;
+    }
+
+    // Click Close Button
+    console.log("  - Clicking settings close button...");
+    await page.click('#btn-settings-close');
+    await new Promise(r => setTimeout(r, 1000)); // wait for close animation
+
+    const isMenuClosed = await page.evaluate(async () => {
+      const menu = document.getElementById('settings-menu');
+      if (!menu) return true;
+      return typeof menu.isOpen === 'function' ? !(await menu.isOpen()) : true;
+    });
+
+    if (isMenuClosed) {
+      console.log("  ✅ SUCCESS: Settings Menu closed successfully.");
+    } else {
+      console.warn("  ⚠️ WARNING: Settings Menu did not report as closed.");
+    }
+
   } catch (err) {
     console.error("❌ TEST EXECUTION ERROR:", err);
     exitCode = 1;

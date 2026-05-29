@@ -1148,12 +1148,15 @@ input[type="range"]::-webkit-slider-thumb:active {
   background: transparent;
 }
 
-.settings-tab {
+.settings-tab:not(ion-segment-button) {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+.settings-tab {
   gap: 4px;
   padding: 8px 4px 10px;
   background: transparent;
@@ -1161,7 +1164,7 @@ input[type="range"]::-webkit-slider-thumb:active {
   border-bottom: 2px solid transparent;
   color: var(--text-muted);
   font-family: var(--font-sans);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.3px;
   cursor: pointer;
@@ -1170,6 +1173,24 @@ input[type="range"]::-webkit-slider-thumb:active {
   -webkit-tap-highlight-color: transparent;
   position: relative;
   bottom: -1px; /* align with bottom border of tab-bar */
+}
+
+/* Dedicated styles using Ionic variables for segment button settings tabs */
+ion-segment-button.settings-tab {
+  --color: var(--text-muted);
+  --color-checked: var(--neon-blue);
+  --color-hover: var(--text-bright);
+  --background-checked: transparent;
+  --background-hover: rgba(255, 255, 255, 0.02);
+  --border-radius: 0px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+ion-segment-button.settings-tab.active {
+  border-bottom-color: var(--neon-blue);
 }
 
 .settings-tab svg {
