@@ -115,7 +115,6 @@ jobs:
           cp ../public/fdroid-icon.png repo/icons/icon-64.png
           cp ../public/fdroid-icon.png repo/icons/org.openanchor.alarm.png
           cp ../public/fdroid-icon.png icon.png
-          cp ../public/fdroid-icon.png repo/icon.png
 
           # Generate index (signs repository using decoded persistent repo.keystore)
           fdroid update --use-date-from-apk --create-metadata
