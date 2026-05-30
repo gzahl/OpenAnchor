@@ -7,6 +7,7 @@ import { OpenAnchorMap } from './map';
 import { wakeLockManager } from './wakelock';
 import { translateDOM, t } from './i18n';
 import type { LanguageCode } from './i18n';
+import { Capacitor } from '@capacitor/core';
 
 // Initialize Ionic Framework Custom Elements
 defineCustomElements();
@@ -1063,8 +1064,8 @@ window.addEventListener('DOMContentLoaded', () => {
   // Handle screen rotation/resizes
   window.addEventListener('resize', triggerInvalidate);
   
-  // Register Service Worker for offline PWA operation
-  if ('serviceWorker' in navigator) {
+  // Register Service Worker for offline PWA operation (web only, disable in native Capacitor apps)
+  if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
       .then((reg) => {
         console.log('OpenAnchor: Service Worker registered: ', reg.scope);
@@ -1072,5 +1073,13 @@ window.addEventListener('DOMContentLoaded', () => {
       .catch((err) => {
         console.error('OpenAnchor: Service Worker failed: ', err);
       });
+  } else if (Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
+    // Unregister any existing service workers to clear cache for native app upgrades
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const registration of registrations) {
+        registration.unregister();
+        console.log('OpenAnchor: Unregistered stray Service Worker in native shell.');
+      }
+    });
   }
 });
