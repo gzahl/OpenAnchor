@@ -10,7 +10,7 @@ import type { LanguageCode } from './i18n';
 import { Capacitor } from '@capacitor/core';
 
 // Initialize Ionic Framework Custom Elements
-defineCustomElements();
+defineCustomElements(window);
 
 // Main application handles
 let appMap: OpenAnchorMap;
