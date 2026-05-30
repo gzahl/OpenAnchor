@@ -93,10 +93,11 @@ jobs:
             --repo-keyalias fdroid-repo \
             --no-prompt
 
-          # Robustly overwrite repo name, description and URL in config.yml (handles commented out templates)
+          # Robustly overwrite repo name, description, URL and repo_icon in config.yml (handles commented out templates)
           sed -i 's|^#*[[:space:]]*repo_name:.*|repo_name: "OpenAnchor Official Repository"|g' config.yml
           sed -i 's|^#*[[:space:]]*repo_description:.*|repo_description: "Official F-Droid repository for the OpenAnchor boat alarm app. Source code is hosted on GitHub: https://github.com/gzahl/OpenAnchor"|g' config.yml
           sed -i 's|^#*[[:space:]]*repo_url:.*|repo_url: "https://gzahl.github.io/OpenAnchor/fdroid/repo"|g' config.yml
+          sed -i 's|^#*[[:space:]]*repo_icon:.*|repo_icon: "icon.png"|g' config.yml
 
           # Update the passwords in config.yml so fdroid can read the keystore
           echo "Configuring persistent keystore password..."
@@ -106,14 +107,15 @@ jobs:
 
           # Place custom repository icons
           mkdir -p repo/icons
-          # Copy standard fallback icons
+          # Copy standard fallback icons in all possible expected locations to eliminate fdroidserver warnings
           cp ../public/fdroid-icon.png repo/icons/icon.png
           cp ../public/fdroid-icon.png repo/icons/icon-64.png
-          # Copy package-specific icon so F-Droid client displays it for the app
           cp ../public/fdroid-icon.png repo/icons/org.openanchor.alarm.png
+          cp ../public/fdroid-icon.png icon.png
+          cp ../public/fdroid-icon.png repo/icon.png
 
-          # Generate index (creates repo signing key in repo.keystore)
-          fdroid update --create-key --use-date-from-apk --create-metadata
+          # Generate index (signs repository using decoded persistent repo.keystore)
+          fdroid update --use-date-from-apk --create-metadata
 
           echo "--- repo contents ---"
           ls -la repo/
