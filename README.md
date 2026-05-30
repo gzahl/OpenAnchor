@@ -94,13 +94,13 @@ The APK lands in `android/app/build/outputs/apk/debug/`.
 
 ### F-Droid Repository (CI)
 
-On every push to `main`, a GitHub Actions workflow automatically:
+On every push to `main`/`master`, a GitHub Actions workflow automatically:
 
-1. Builds the web app
-2. Syncs Capacitor
-3. Compiles a signed release APK
-4. Generates an [F-Droid](https://f-droid.org/) repository
-5. Deploys the repo to **GitHub Pages**
+1. Builds the web app and runs automated browser tests.
+2. Syncs Capacitor assets with the native Android layer.
+3. Compiles a signed release APK (`openanchor.apk`).
+4. Decodes a persistent repository signing key and configures the F-Droid server metadata.
+5. Deploys the F-Droid repository and its QR-coded landing page to **GitHub Pages**.
 
 To install on your phone:
 
@@ -110,7 +110,44 @@ To install on your phone:
    ```
 2. Refresh and install **OpenAnchor**.
 
-> The CI build uses an ephemeral debug key. For a production release, add your own keystore as [GitHub Actions secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions).
+#### 🔑 Enforcing Key Persistence (Required Setup)
+
+To prevent repository certificate mismatches (which would lock you out of future app updates on your phone), **the CI pipeline strictly requires a persistent repository signing keystore**. If the GitHub Repository Secrets are missing, the build will explicitly fail.
+
+Follow these 4 steps once to generate and register your repository signing certificate:
+
+##### Step 1: Generate the Keystore Locally
+Open your computer's terminal and run:
+```bash
+keytool -genkey -v -keystore repo.keystore -alias fdroid-repo -keyalg RSA -keysize 2048 -validity 10000
+```
+*Enter a secure password and remember it.*
+
+##### Step 2: Convert the Keystore to a Base64 String
+Convert the binary `repo.keystore` file to a Base64 string so it can be stored as text:
+* **On Linux / WSL**:
+  ```bash
+  base64 -w 0 repo.keystore > keystore_base64.txt
+  ```
+* **On macOS**:
+  ```bash
+  base64 -i repo.keystore -o keystore_base64.txt
+  ```
+*Open `keystore_base64.txt` and copy its entire text contents.*
+
+##### Step 3: Add Secrets to GitHub
+Go to your GitHub repository (**gzahl/OpenAnchor**) in the web browser:
+1. Navigate to **Settings** > **Secrets and variables** > **Actions**.
+2. Click the green **New repository secret** button.
+3. Create the first secret:
+   * **Name**: `FDROID_KEYSTORE`
+   * **Value**: *Paste the Base64 string from `keystore_base64.txt`*
+4. Click **New repository secret** again and create the second secret:
+   * **Name**: `FDROID_KEYSTORE_PASSWORD`
+   * **Value**: *The password you chose in Step 1*
+
+##### Step 4: Run the Pipeline
+Once your secrets are set up, pushing a commit to `master` will trigger the build pipeline, which will decode your keystore, compile the repository, and deploy it to GitHub Pages. All future builds will now be signed with the same, permanent key!
 
 ---
 

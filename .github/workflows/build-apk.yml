@@ -66,6 +66,13 @@ jobs:
           FDROID_KEYSTORE_PASSWORD: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
         run: |
           set -e
+          
+          # Strictly verify that keystore secrets are present in GitHub Secrets
+          if [ -z "$FDROID_KEYSTORE_BASE64" ] || [ -z "$FDROID_KEYSTORE_PASSWORD" ]; then
+            echo "::error::F-Droid signing secrets (FDROID_KEYSTORE and FDROID_KEYSTORE_PASSWORD) are strictly required for key persistence but are missing in GitHub Repository Secrets! The build is terminated to prevent repository signature mismatches."
+            exit 1
+          fi
+          
           # Create a clean build directory for fdroid
           mkdir -p fdroid-build/repo fdroid-build/metadata
           cp apk/openanchor.apk fdroid-build/repo/
@@ -75,11 +82,9 @@ jobs:
           
           cd fdroid-build
 
-          # If the secret is set, decode the persistent keystore!
-          if [ -n "$FDROID_KEYSTORE_BASE64" ]; then
-            echo "Decoding persistent F-Droid keystore..."
-            echo "$FDROID_KEYSTORE_BASE64" | base64 -d > repo.keystore
-          fi
+          # Decode the persistent keystore
+          echo "Decoding persistent F-Droid keystore..."
+          echo "$FDROID_KEYSTORE_BASE64" | base64 -d > repo.keystore
 
           # Initialize repo config (uses separate keystore for repo index signing)
           export ANDROID_HOME=$ANDROID_SDK_ROOT
@@ -93,13 +98,11 @@ jobs:
           sed -i 's|^#*[[:space:]]*repo_description:.*|repo_description: "Official F-Droid repository for the OpenAnchor boat alarm app. Source code is hosted on GitHub: https://github.com/gzahl/OpenAnchor"|g' config.yml
           sed -i 's|^#*[[:space:]]*repo_url:.*|repo_url: "https://gzahl.github.io/OpenAnchor/fdroid/repo"|g' config.yml
 
-          # If the secret is set, update the passwords in config.yml so fdroid can read the keystore!
-          if [ -n "$FDROID_KEYSTORE_PASSWORD" ]; then
-            echo "Configuring persistent keystore password..."
-            # Replace keystorepass and keypass in config.yml (handles commented out templates)
-            sed -i "s|^#*[[:space:]]*keystorepass:.*|keystorepass: \"$FDROID_KEYSTORE_PASSWORD\"|g" config.yml
-            sed -i "s|^#*[[:space:]]*keypass:.*|keypass: \"$FDROID_KEYSTORE_PASSWORD\"|g" config.yml
-          fi
+          # Update the passwords in config.yml so fdroid can read the keystore
+          echo "Configuring persistent keystore password..."
+          # Replace keystorepass and keypass in config.yml (handles commented out templates)
+          sed -i "s|^#*[[:space:]]*keystorepass:.*|keystorepass: \"$FDROID_KEYSTORE_PASSWORD\"|g" config.yml
+          sed -i "s|^#*[[:space:]]*keypass:.*|keypass: \"$FDROID_KEYSTORE_PASSWORD\"|g" config.yml
 
           # Place custom repository icons
           mkdir -p repo/icons
