@@ -58,7 +58,7 @@ jobs:
             $GITHUB_WORKSPACE/apk/openanchor.apk
 
       - name: Install fdroidserver
-        run: pip install fdroidserver
+        run: pip install fdroidserver qrcode Pillow
 
       - name: Build F-Droid repo
         run: |
@@ -105,14 +105,17 @@ jobs:
           # Create clean output structure
           mkdir -p pages/fdroid
           
-          # Copy the entire F-Droid repo folder recursively (includes index-v1.jar, index-v2.json, APKs, icons, etc.)
+          # Copy the entire F-Droid repo folder recursively (includes index-v1.jar, index-v2.json, APKs, index.png, index.css, icons, etc.)
           cp -r fdroid-build/repo pages/fdroid/
           
           # Place the repository logo in the parent directory of the repo folder to prevent it from being parsed as a ghost app
           cp public/fdroid-icon.png pages/fdroid/logo.png
           
-          # Copy the standard F-Droid landing page (generated dynamically by the tool) to the root
+          # Copy the standard F-Droid landing page and all associated assets (index.css, index.png, etc.) to the root so the root renders it fully styled with QR code
           cp fdroid-build/repo/index.html pages/index.html
+          cp fdroid-build/repo/*.css pages/ 2>/dev/null || true
+          cp fdroid-build/repo/*.png pages/ 2>/dev/null || true
+          cp fdroid-build/repo/*.ico pages/ 2>/dev/null || true
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
