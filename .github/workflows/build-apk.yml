@@ -61,6 +61,9 @@ jobs:
         run: pip install fdroidserver qrcode Pillow
 
       - name: Build F-Droid repo
+        env:
+          FDROID_KEYSTORE_BASE64: ${{ secrets.FDROID_KEYSTORE }}
+          FDROID_KEYSTORE_PASSWORD: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
         run: |
           set -e
           # Create a clean build directory for fdroid
@@ -71,6 +74,12 @@ jobs:
           cp metadata/org.openanchor.alarm.yml fdroid-build/metadata/
           
           cd fdroid-build
+
+          # If the secret is set, decode the persistent keystore!
+          if [ -n "$FDROID_KEYSTORE_BASE64" ]; then
+            echo "Decoding persistent F-Droid keystore..."
+            echo "$FDROID_KEYSTORE_BASE64" | base64 -d > repo.keystore
+          fi
 
           # Initialize repo config (uses separate keystore for repo index signing)
           export ANDROID_HOME=$ANDROID_SDK_ROOT
@@ -83,6 +92,14 @@ jobs:
           sed -i 's|^#*[[:space:]]*repo_name:.*|repo_name: "OpenAnchor Official Repository"|g' config.yml
           sed -i 's|^#*[[:space:]]*repo_description:.*|repo_description: "Official F-Droid repository for the OpenAnchor boat alarm app. Source code is hosted on GitHub: https://github.com/gzahl/OpenAnchor"|g' config.yml
           sed -i 's|^#*[[:space:]]*repo_url:.*|repo_url: "https://gzahl.github.io/OpenAnchor/fdroid/repo"|g' config.yml
+
+          # If the secret is set, update the passwords in config.yml so fdroid can read the keystore!
+          if [ -n "$FDROID_KEYSTORE_PASSWORD" ]; then
+            echo "Configuring persistent keystore password..."
+            # Replace keystorepass and keypass in config.yml (handles commented out templates)
+            sed -i "s|^#*[[:space:]]*keystorepass:.*|keystorepass: \"$FDROID_KEYSTORE_PASSWORD\"|g" config.yml
+            sed -i "s|^#*[[:space:]]*keypass:.*|keypass: \"$FDROID_KEYSTORE_PASSWORD\"|g" config.yml
+          fi
 
           # Place custom repository icons
           mkdir -p repo/icons
