@@ -12,7 +12,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         // Reset WebView rendering layer and force complete layout/redraw pass on resume (e.g., after dismissing
         // a permission dialog) to reliably recover from Android hardware composition layer / GPU context loss (black/blank screen).
