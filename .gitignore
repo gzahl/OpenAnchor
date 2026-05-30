@@ -30,5 +30,7 @@ android/local.properties
 android/captures
 android/.externalNativeBuild
 *.keystore
+repo.keystore
+keystore_base64.txt
 apk-out/
 fdroid/
