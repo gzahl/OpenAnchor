@@ -125,6 +125,20 @@ export class GPSEngine {
       console.error("Failed to load historical track: ", e);
       this.vesselHistory = [];
     }
+
+    // Register Cordova/Capacitor App Resume listener to re-bind Geolocation permissions.
+    // This recovers location tracking if it got blocked or stuck in an error state during
+    // a permission request prompt overlay.
+    try {
+      document.addEventListener('resume', () => {
+        if (!this.isSimulationMode) {
+          console.log("OpenAnchor: App resumed. Re-binding Geolocation watch to activate newly granted permissions.");
+          this.restartTracking();
+        }
+      });
+    } catch (err) {
+      console.warn("OpenAnchor: Failed to register native resume event listener:", err);
+    }
   }
 
   /**
@@ -346,6 +360,14 @@ export class GPSEngine {
       navigator.geolocation.clearWatch(this.watchId);
       this.watchId = null;
     }
+  }
+
+  /**
+   * Fully restarts geolocation tracking
+   */
+  public restartTracking(): void {
+    this.stopTracking();
+    this.startTracking();
   }
 
   /**
