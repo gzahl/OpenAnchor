@@ -79,9 +79,10 @@ jobs:
             --repo-keyalias fdroid-repo \
             --no-prompt
 
-          # Robustly overwrite repo name and description in config.yml (handles any default string template)
-          sed -i 's/^repo_name:.*/repo_name: "OpenAnchor Official Repository"/g' config.yml
-          sed -i 's|^repo_description:.*|repo_description: "Official F-Droid repository for the OpenAnchor boat alarm app. Source code is hosted on GitHub: https://github.com/gzahl/OpenAnchor"|g' config.yml
+          # Robustly overwrite repo name, description and URL in config.yml (handles commented out templates)
+          sed -i 's|^#*[[:space:]]*repo_name:.*|repo_name: "OpenAnchor Official Repository"|g' config.yml
+          sed -i 's|^#*[[:space:]]*repo_description:.*|repo_description: "Official F-Droid repository for the OpenAnchor boat alarm app. Source code is hosted on GitHub: https://github.com/gzahl/OpenAnchor"|g' config.yml
+          sed -i 's|^#*[[:space:]]*repo_url:.*|repo_url: "https://gzahl.github.io/OpenAnchor/fdroid/repo"|g' config.yml
 
           # Place custom repository icons
           mkdir -p repo/icons
@@ -103,47 +104,15 @@ jobs:
         run: |
           # Create clean output structure
           mkdir -p pages/fdroid
+          
           # Copy the entire F-Droid repo folder recursively (includes index-v1.jar, index-v2.json, APKs, icons, etc.)
           cp -r fdroid-build/repo pages/fdroid/
+          
           # Place the repository logo in the parent directory of the repo folder to prevent it from being parsed as a ghost app
           cp public/fdroid-icon.png pages/fdroid/logo.png
-          # Create landing page
-          REPO_URL="https://gzahl.github.io/OpenAnchor/fdroid/repo"
-          QR_URL="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=$REPO_URL"
-          cat > pages/index.html << EOF
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>OpenAnchor – F-Droid Repo</title>
-            <style>
-              body { font-family: system-ui, sans-serif; background: #0b0e1a; color: #e0e6f0; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-              .card { background: #131827; border: 1px solid #2a3350; border-radius: 16px; padding: 3rem; text-align: center; max-width: 480px; }
-              h1 { font-size: 1.8rem; margin: 0 0 0.5rem; color: #05ffb0; }
-              p { color: #8c9bb4; line-height: 1.5; }
-              code { display: inline-block; background: #1a2238; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; word-break: break-all; }
-              a { color: #05ffb0; }
-              .badge { display: inline-block; background: #1a2238; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.8rem; margin-top: 1rem; }
-              .qr { margin: 1.5rem 0; }
-              .qr img { border-radius: 12px; max-width: 100%; }
-            </style>
-          </head>
-          <body>
-            <div class="card">
-              <div style="margin-bottom: 1rem;"><img src="fdroid/repo/icons/icon.png" alt="OpenAnchor Logo" width="96" height="96" style="border-radius: 20px; box-shadow: 0 8px 24px rgba(5, 255, 176, 0.2);"></div>
-              <h1>OpenAnchor</h1>
-              <p>Official F-Droid repository for the OpenAnchor boat alarm app.</p>
-              <div class="qr"><img src="$QR_URL" alt="QR Code" width="250" height="250"></div>
-              <p>Scan with F-Droid client, or add manually:</p>
-              <code>$REPO_URL</code>
-              <br><br>
-              <a href="fdroid/repo/">Browse repository</a>
-              <div class="badge">✓ F-Droid Repo</div>
-            </div>
-          </body>
-          </html>
-          EOF
+          
+          # Copy the standard F-Droid landing page (generated dynamically by the tool) to the root
+          cp fdroid-build/repo/index.html pages/index.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
