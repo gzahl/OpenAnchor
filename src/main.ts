@@ -599,16 +599,8 @@ function setupEventListeners(): void {
     audioSynth.playSonarPing();
   });
 
-  // D. Strobe Alarm Screen Mute (Instantly clears anchor and disarms)
-  elStrobeMuteBtn.addEventListener('click', async () => {
-    gpsEngine.clearAnchor();
-    gpsEngine.clearVesselHistory();
-    appMap.clearAnchor();
-    appMap.clearVesselTrack();
-    
-    updateAnchorButtonUI();
-    
-    await wakeLockManager.release();
+  // D. Strobe Alarm Screen Mute (Silences siren but keeps anchor set)
+  elStrobeMuteBtn.addEventListener('click', () => {
     audioSynth.silenceAll();
     elAlarmStrobe.classList.add('hidden');
   });
