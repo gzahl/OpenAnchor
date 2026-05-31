@@ -34,3 +34,6 @@ repo.keystore
 keystore_base64.txt
 apk-out/
 fdroid/
+
+# Ignored static assets (copied from node_modules during build)
+public/assets/

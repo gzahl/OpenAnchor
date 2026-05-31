@@ -1,5 +1,4 @@
 import './style.css';
-import { defineCustomElements } from '@ionic/core/loader';
 import { gpsEngine, GPSEngine } from './gps';
 import type { GPSPosition, AlarmState } from './gps';
 import { audioSynth } from './audio';
@@ -8,9 +7,6 @@ import { wakeLockManager } from './wakelock';
 import { translateDOM, t } from './i18n';
 import type { LanguageCode } from './i18n';
 import { Capacitor } from '@capacitor/core';
-
-// Initialize Ionic Framework Custom Elements
-defineCustomElements(window);
 
 // Main application handles
 let appMap: OpenAnchorMap;

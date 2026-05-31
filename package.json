@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && mkdir -p dist/assets && cp -r node_modules/@ionic/core/dist/ionic/svg dist/ 2>/dev/null || true && cp -r node_modules/@ionic/core/dist/ionic/svg dist/assets/ 2>/dev/null || true && cp -n node_modules/@ionic/core/dist/esm/*.js dist/ 2>/dev/null || true && cp -n node_modules/@ionic/core/dist/esm/*.js dist/assets/ 2>/dev/null || true",
+    "build": "mkdir -p public/assets && cp -r node_modules/@ionic/core/dist/ionic/svg public/assets/ 2>/dev/null || true && cp -n node_modules/@ionic/core/dist/ionic/*.js public/assets/ 2>/dev/null || true && cp -n node_modules/@ionic/core/dist/esm/*.js public/assets/ 2>/dev/null || true && tsc && vite build",
     "preview": "vite preview",
     "test": "node automated_test.cjs"
   },
