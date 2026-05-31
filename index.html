@@ -301,13 +301,12 @@
                 <div id="scope-progress" class="scope-progress-bar"></div>
               </div>
 
-              <!-- Radius / Chain Length Select Dropdown -->
+              <!-- Radius / Chain Length Dropdown Selector -->
               <div style="padding: 10px 15px 5px 15px;">
-                <div class="radius-controller" style="border: none; padding: 0;">
-                  <ion-select id="select-radius" label="ALARM-RADIUS (KETTENLÄNGE)" label-placement="stacked" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-glass); border-radius: 6px; --padding-start: 12px; --padding-end: 12px; height: 50px; font-weight: 600;">
-                    <!-- Dynamically populated based on active unit -->
-                  </ion-select>
-                </div>
+                <ion-select id="select-radius" interface="popover" label="ALARM-RADIUS (KETTENLÄNGE)" label-placement="stacked" style="width: 100%; height: 50px; --border-radius: 6px; font-weight: 700; margin: 0; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-glass); --padding-start: 15px; --padding-end: 15px; font-size: 1.15rem; font-family: var(--font-mono);">
+                  <!-- Dynamically populated based on active unit -->
+                </ion-select>
+              </div>
 
                 <!-- Sector Alarm Controls (Collapsible inline settings) -->
                 <div class="sector-main-controls" style="background: rgba(255, 255, 255, 0.02); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.03); margin-top: 8px;">
@@ -372,13 +371,11 @@
                   <div class="map-selector" style="display: flex; width: 100%; gap: 4px;">
                     <ion-button class="map-layer-btn active" data-layer="seamap" fill="solid" color="primary" style="flex-grow: 1; font-weight: 600; font-size: 0.7rem; height: 28px;">SEAMAP</ion-button>
                     <ion-button class="map-layer-btn" data-layer="topo" fill="outline" color="primary" style="flex-grow: 1; font-weight: 600; font-size: 0.7rem; height: 28px;">TOPO</ion-button>
-                    <ion-button class="map-layer-btn" data-layer="satellite" fill="outline" color="primary" style="flex-grow: 1; font-weight: 600; font-size: 0.7rem; height: 28px;">SAT</ion-button>
                   </div>
                 </div>
 
               </div>
 
-            </div>
           </ion-toolbar>
         </ion-footer>
 

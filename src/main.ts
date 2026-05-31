@@ -21,7 +21,7 @@ const elSpeedVal = document.getElementById('speed-val') as any;
 const elCogVal = document.getElementById('cog-val') as any;
 const elAccuracyVal = document.getElementById('accuracy-val') as any;
 
-const elRadiusSelect = document.getElementById('select-radius') as any;
+const elSelectRadius = document.getElementById('select-radius') as any;
 
 const elBtnAnchorSet = document.getElementById('btn-anchor-set') as any;
 
@@ -416,15 +416,22 @@ function updateAnchorButtonUI(): void {
 }
 
 function populateRadiusSelectOptions(unit: 'm' | 'ft'): void {
-  if (!elRadiusSelect) return;
+  if (!elSelectRadius) return;
   
   // Clear existing options
-  elRadiusSelect.innerHTML = '';
+  elSelectRadius.innerHTML = '';
   
-  // Define standard values based on unit
-  const values = unit === 'ft' 
-    ? [15, 30, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500, 650]
-    : [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 120, 150, 200];
+  // Dynamically generate values based on unit (meters: 3m to 150m in 1m steps; feet: 10ft to 500ft in 5ft steps)
+  const values: number[] = [];
+  if (unit === 'ft') {
+    for (let i = 10; i <= 500; i += 5) {
+      values.push(i);
+    }
+  } else {
+    for (let i = 3; i <= 150; i += 1) {
+      values.push(i);
+    }
+  }
     
   const unitLabel = unit === 'ft' ? 'ft' : 'm';
   
@@ -432,14 +439,14 @@ function populateRadiusSelectOptions(unit: 'm' | 'ft'): void {
     const opt = document.createElement('ion-select-option') as any;
     opt.value = val.toString();
     opt.textContent = `${val} ${unitLabel}`;
-    elRadiusSelect.appendChild(opt);
+    elSelectRadius.appendChild(opt);
   });
   
   // Set current selected value
   const r = gpsEngine.getAlarmRadius();
-  // Find closest value if current radius is not exactly in list
   const closest = values.reduce((prev, curr) => Math.abs(curr - r) < Math.abs(prev - r) ? curr : prev);
-  elRadiusSelect.value = closest.toString();
+  elSelectRadius.value = closest.toString();
+  
   if (closest !== r) {
     gpsEngine.setAlarmRadius(closest);
   }
@@ -462,9 +469,9 @@ function toggleSectorSettingsState(active: boolean): void {
    ========================================================================== */
 
 function setupEventListeners(): void {
-  // A. Dropdown Radius Select Event
-  if (elRadiusSelect) {
-    elRadiusSelect.addEventListener('ionChange', (e: any) => {
+  // A. Radius Dropdown Change Event
+  if (elSelectRadius) {
+    elSelectRadius.addEventListener('ionChange', (e: any) => {
       const r = parseInt(e.detail.value, 10);
       gpsEngine.setAlarmRadius(r);
       triggerMapAnchorUpdate();

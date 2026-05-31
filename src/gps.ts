@@ -24,7 +24,7 @@ export class GPSEngine {
   private watchId: number | null = null;
   private lastPosition: GPSPosition | null = null;
   private anchorPosition: { lat: number; lng: number } | null = null;
-  private alarmRadius = 30; // default 30m
+  private alarmRadius = 15; // default 15m
   private onPositionUpdateCallback: ((pos: GPSPosition) => void) | null = null;
   private onAlarmStateChangeCallback: ((state: AlarmState, distance: number) => void) | null = null;
   
@@ -183,7 +183,7 @@ export class GPSEngine {
    * Set the safe boundary radius in meters
    */
   public setAlarmRadius(radius: number): void {
-    this.alarmRadius = Math.max(5, Math.min(200, radius));
+    this.alarmRadius = Math.max(3, Math.min(150, radius));
     localStorage.setItem('openanchor_radius', this.alarmRadius.toString());
     this.evaluateAlarmState();
     this.syncNativeService();

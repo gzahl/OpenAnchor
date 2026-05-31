@@ -1505,3 +1505,5 @@ input:checked + .toggle-slider:before {
   --background: var(--neon-orange) !important;
   --color: #000000 !important;
 }
+
+
