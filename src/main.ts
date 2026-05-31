@@ -21,12 +21,7 @@ const elSpeedVal = document.getElementById('speed-val') as any;
 const elCogVal = document.getElementById('cog-val') as any;
 const elAccuracyVal = document.getElementById('accuracy-val') as any;
 
-const elRadiusValInput = document.getElementById('radius-val-input') as any;
-const elRadiusSlider = document.getElementById('radius-slider') as any;
-const elRadiusMinus10 = document.getElementById('radius-minus-10') as any;
-const elRadiusMinus1 = document.getElementById('radius-minus-1') as any;
-const elRadiusPlus1 = document.getElementById('radius-plus-1') as any;
-const elRadiusPlus10 = document.getElementById('radius-plus-10') as any;
+const elRadiusSelect = document.getElementById('select-radius') as any;
 
 const elBtnAnchorSet = document.getElementById('btn-anchor-set') as any;
 
@@ -34,7 +29,6 @@ const elPadN = document.getElementById('pad-n') as any;
 const elPadS = document.getElementById('pad-s') as any;
 const elPadE = document.getElementById('pad-e') as any;
 const elPadW = document.getElementById('pad-w') as any;
-const elBtnToggleDpad = document.getElementById('btn-toggle-dpad') as any;
 const elAnchorAdjusterPanel = document.querySelector('.anchor-adjuster-panel') as any;
 
 const elStatusGps = document.getElementById('status-gps') as any;
@@ -103,7 +97,6 @@ function initApp() {
 
   // Ensure no anchor is set when the app starts
   gpsEngine.clearAnchor();
-  const radius = gpsEngine.getAlarmRadius();
 
   // Bind map interactions to GPS Engine
   appMap.onAnchorMoved(async (lat, lng) => {
@@ -154,9 +147,8 @@ function initApp() {
   // Setup UI event listeners
   setupEventListeners();
 
-  // Load initial radius settings in slider and text input
-  if (elRadiusSlider) elRadiusSlider.value = radius.toString();
-  if (elRadiusValInput) elRadiusValInput.value = radius.toString();
+  // Synchronize dynamic DOM settings readouts to match engine's saved states
+  populateRadiusSelectOptions(gpsEngine.getLengthUnit());
 
   // Load initial advanced settings fields
   if (elChkSectorEnable) elChkSectorEnable.checked = gpsEngine.getUseSectorAlarm();
@@ -407,6 +399,9 @@ function updateAnchorButtonUI(): void {
     }
     elBtnAnchorSet.setAttribute('color', 'danger');
     enableAnchorTuningButtons(true);
+    if (elAnchorAdjusterPanel) {
+      elAnchorAdjusterPanel.classList.remove('hidden');
+    }
   } else {
     if (labelSpan) {
       labelSpan.dataset.i18n = 'anchor_set';
@@ -414,6 +409,39 @@ function updateAnchorButtonUI(): void {
     }
     elBtnAnchorSet.setAttribute('color', 'secondary');
     enableAnchorTuningButtons(false);
+    if (elAnchorAdjusterPanel) {
+      elAnchorAdjusterPanel.classList.add('hidden');
+    }
+  }
+}
+
+function populateRadiusSelectOptions(unit: 'm' | 'ft'): void {
+  if (!elRadiusSelect) return;
+  
+  // Clear existing options
+  elRadiusSelect.innerHTML = '';
+  
+  // Define standard values based on unit
+  const values = unit === 'ft' 
+    ? [15, 30, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500, 650]
+    : [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 120, 150, 200];
+    
+  const unitLabel = unit === 'ft' ? 'ft' : 'm';
+  
+  values.forEach(val => {
+    const opt = document.createElement('ion-select-option') as any;
+    opt.value = val.toString();
+    opt.textContent = `${val} ${unitLabel}`;
+    elRadiusSelect.appendChild(opt);
+  });
+  
+  // Set current selected value
+  const r = gpsEngine.getAlarmRadius();
+  // Find closest value if current radius is not exactly in list
+  const closest = values.reduce((prev, curr) => Math.abs(curr - r) < Math.abs(prev - r) ? curr : prev);
+  elRadiusSelect.value = closest.toString();
+  if (closest !== r) {
+    gpsEngine.setAlarmRadius(closest);
   }
 }
 
@@ -434,59 +462,14 @@ function toggleSectorSettingsState(active: boolean): void {
    ========================================================================== */
 
 function setupEventListeners(): void {
-  // A. Tactile Precision Radius Widget Events (Using Ionic ionInput and ionChange)
-  elRadiusSlider.addEventListener('ionInput', (e: any) => {
-    const r = parseInt(e.target.value, 10);
-    elRadiusValInput.value = r.toString();
-    
-    // Dynamic map circle resizing while dragging slider
-    const anchor = gpsEngine.getAnchor();
-    if (anchor) {
-      appMap.updateAnchorMarker(
-        anchor.lat, 
-        anchor.lng, 
-        r, 
-        gpsEngine.getIsArmed() ? 'SAFE' : 'DISARMED',
-        gpsEngine.getUseSectorAlarm(),
-        gpsEngine.getSectorWidth(),
-        gpsEngine.getSectorHeading(),
-        gpsEngine.getLockAnchorAfterSet()
-      );
-    }
-  });
-
-  elRadiusSlider.addEventListener('ionChange', (e: any) => {
-    const r = parseInt(e.target.value, 10);
-    gpsEngine.setAlarmRadius(r);
-  });
-
-  // Direct numeric keyboard input typing
-  elRadiusValInput.addEventListener('change', (e) => {
-    let r = parseInt((e.target as HTMLInputElement).value, 10);
-    if (isNaN(r)) {
-      r = gpsEngine.getAlarmRadius();
-    }
-    r = Math.max(5, Math.min(200, r)); // Enforce boundaries [5, 200]
-    elRadiusValInput.value = r.toString();
-    elRadiusSlider.value = r.toString();
-    gpsEngine.setAlarmRadius(r);
-    triggerMapAnchorUpdate();
-  });
-
-  // Four touch-friendly flanking buttons
-  const stepRadius = (delta: number) => {
-    let r = parseInt(elRadiusSlider.value, 10) + delta;
-    r = Math.max(5, Math.min(200, r)); // boundaries check
-    elRadiusSlider.value = r.toString();
-    elRadiusValInput.value = r.toString();
-    gpsEngine.setAlarmRadius(r);
-    triggerMapAnchorUpdate();
-  };
-
-  elRadiusMinus10.addEventListener('click', () => stepRadius(-10));
-  elRadiusMinus1.addEventListener('click', () => stepRadius(-1));
-  elRadiusPlus1.addEventListener('click', () => stepRadius(1));
-  elRadiusPlus10.addEventListener('click', () => stepRadius(10));
+  // A. Dropdown Radius Select Event
+  if (elRadiusSelect) {
+    elRadiusSelect.addEventListener('ionChange', (e: any) => {
+      const r = parseInt(e.detail.value, 10);
+      gpsEngine.setAlarmRadius(r);
+      triggerMapAnchorUpdate();
+    });
+  }
 
   const bindPadBtn = (btn: HTMLButtonElement, dir: 'N' | 'S' | 'E' | 'W') => {
     if (!btn) return;
@@ -526,15 +509,6 @@ function setupEventListeners(): void {
   bindPadBtn(elPadS, 'S');
   bindPadBtn(elPadE, 'E');
   bindPadBtn(elPadW, 'W');
-
-  // Toggle D-Pad Panel Visibility
-  if (elBtnToggleDpad && elAnchorAdjusterPanel) {
-    elBtnToggleDpad.addEventListener('click', () => {
-      audioSynth.unlock();
-      elAnchorAdjusterPanel.classList.toggle('hidden');
-      elBtnToggleDpad.classList.toggle('active');
-    });
-  }
 
   // B. Drop/Lift Anchor Button & Coupled Alarm Toggle
   elBtnAnchorSet.addEventListener('click', async () => {
@@ -875,16 +849,8 @@ function setupEventListeners(): void {
   elSelectLengthUnit.addEventListener('ionChange', (e: any) => {
     const unit = e.target.value as 'm' | 'ft';
     gpsEngine.setLengthUnit(unit);
-    // Sync radius widget boundaries and readout to new unit
-    const minR = unit === 'ft' ? 15 : 5;
-    const maxR = unit === 'ft' ? 650 : 200;
-    elRadiusSlider.min = minR.toString();
-    elRadiusSlider.max = maxR.toString();
-    elRadiusValInput.min = minR.toString();
-    elRadiusValInput.max = maxR.toString();
-    const r = gpsEngine.getAlarmRadius();
-    elRadiusSlider.value = r.toString();
-    elRadiusValInput.value = r.toString();
+    // Sync radius select dropdown to new unit
+    populateRadiusSelectOptions(unit);
     triggerMapAnchorUpdate();
   });
 

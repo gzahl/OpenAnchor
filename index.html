@@ -301,29 +301,12 @@
                 <div id="scope-progress" class="scope-progress-bar"></div>
               </div>
 
-              <!-- Radius Controls -->
+              <!-- Radius / Chain Length Select Dropdown -->
               <div style="padding: 10px 15px 5px 15px;">
-                <div class="radius-controller">
-                  <div class="label-row" style="display: flex; justify-content: space-between; align-items: center;">
-                    <span class="label" data-i18n="alarm_radius" style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">ALARM-RADIUS</span>
-                    <div class="radius-right-side" style="display: flex; align-items: center; gap: 8px;">
-                      <span class="radius-readout" style="font-family: var(--font-mono); font-size: 1.1rem; color: var(--neon-blue); font-weight: 700;">
-                        <input type="number" id="radius-val-input" min="5" max="200" value="30" class="radius-num-input" style="background: transparent; border: none; color: inherit; width: 45px; text-align: right; font-family: inherit; font-size: inherit; font-weight: 700; outline: none;" />
-                        <span class="unit-sub" style="font-size: 0.7rem; font-weight: 400; color: var(--text-muted); margin-left: 2px;">m</span>
-                      </span>
-                      <!-- Fine Tune D-Pad toggle button -->
-                      <ion-button id="btn-toggle-dpad" class="mini-toggle-btn" fill="solid" color="dark" style="--padding-start: 6px; --padding-end: 6px; height: 26px; --border-radius: 4px;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 2.12M12 2v4M12 18v4M4.93 4.93l2.12 2.12M3 12h3M18 12h3M19.07 19.07l-2.12-2.12"/></svg>
-                      </ion-button>
-                    </div>
-                  </div>
-                  <div class="slider-row" style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-                    <ion-button id="radius-minus-10" fill="solid" color="dark" style="--padding-start: 8px; --padding-end: 8px; height: 32px; font-weight: 700; font-size: 0.75rem;">-10</ion-button>
-                    <ion-button id="radius-minus-1" fill="solid" color="dark" style="--padding-start: 10px; --padding-end: 10px; height: 32px; font-weight: 700; font-size: 0.75rem;">-1</ion-button>
-                    <ion-range id="radius-slider" min="5" max="200" value="30" step="1" style="flex-grow: 1; --height: 32px; padding: 0 5px;"></ion-range>
-                    <ion-button id="radius-plus-1" fill="solid" color="dark" style="--padding-start: 10px; --padding-end: 10px; height: 32px; font-weight: 700; font-size: 0.75rem;">+1</ion-button>
-                    <ion-button id="radius-plus-10" fill="solid" color="dark" style="--padding-start: 8px; --padding-end: 8px; height: 32px; font-weight: 700; font-size: 0.75rem;">+10</ion-button>
-                  </div>
+                <div class="radius-controller" style="border: none; padding: 0;">
+                  <ion-select id="select-radius" label="ALARM-RADIUS (KETTENLÄNGE)" label-placement="stacked" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-glass); border-radius: 6px; --padding-start: 12px; --padding-end: 12px; height: 50px; font-weight: 600;">
+                    <!-- Dynamically populated based on active unit -->
+                  </ion-select>
                 </div>
 
                 <!-- Sector Alarm Controls (Collapsible inline settings) -->
