@@ -29,7 +29,6 @@ const elRadiusPlus1 = document.getElementById('radius-plus-1') as any;
 const elRadiusPlus10 = document.getElementById('radius-plus-10') as any;
 
 const elBtnAnchorSet = document.getElementById('btn-anchor-set') as any;
-const elBtnAlarmArm = document.getElementById('btn-alarm-arm') as any;
 
 const elPadN = document.getElementById('pad-n') as any;
 const elPadS = document.getElementById('pad-s') as any;
@@ -107,7 +106,7 @@ function initApp() {
   const radius = gpsEngine.getAlarmRadius();
 
   // Bind map interactions to GPS Engine
-  appMap.onAnchorMoved((lat, lng) => {
+  appMap.onAnchorMoved(async (lat, lng) => {
     // If anchor lock is enabled and we already have an anchor, block moving/resetting it via map clicks/drags
     if (gpsEngine.getLockAnchorAfterSet() && gpsEngine.getAnchor() !== null) {
       return;
@@ -120,14 +119,16 @@ function initApp() {
       lat, 
       lng, 
       r, 
-      gpsEngine.getIsArmed() ? 'SAFE' : 'DISARMED',
+      'SAFE', // Automatically Safe/Armed
       gpsEngine.getUseSectorAlarm(),
       gpsEngine.getSectorWidth(),
       gpsEngine.getSectorHeading(),
       gpsEngine.getLockAnchorAfterSet()
     );
-    enableArmingButton(true);
-    enableAnchorTuningButtons(true);
+    updateAnchorButtonUI();
+    
+    // Coupled Activation: Request Wake Lock
+    await wakeLockManager.acquire();
     
     // Force boat heading to update toward the new anchor position
     const boatLatLng = appMap.getBoatLatLng();
@@ -379,16 +380,7 @@ function updateAlarmStatusUI(state: AlarmState): void {
   }
 }
 
-function enableArmingButton(enable: boolean): void {
-  if (!elBtnAlarmArm) return;
-  if (enable) {
-    elBtnAlarmArm.classList.remove('btn-disabled');
-    elBtnAlarmArm.removeAttribute('disabled');
-  } else {
-    elBtnAlarmArm.classList.add('btn-disabled');
-    elBtnAlarmArm.setAttribute('disabled', 'true');
-  }
-}
+
 
 function enableAnchorTuningButtons(enable: boolean): void {
   const btns = [elPadN, elPadS, elPadE, elPadW];
@@ -402,6 +394,27 @@ function enableAnchorTuningButtons(enable: boolean): void {
       btn.setAttribute('disabled', 'true');
     }
   });
+}
+
+function updateAnchorButtonUI(): void {
+  if (!elBtnAnchorSet) return;
+  const anchor = gpsEngine.getAnchor();
+  const labelSpan = elBtnAnchorSet.querySelector('span[data-i18n]') as HTMLSpanElement;
+  if (anchor) {
+    if (labelSpan) {
+      labelSpan.dataset.i18n = 'alarm_disarm';
+      labelSpan.textContent = t('alarm_disarm', gpsEngine.getLanguage());
+    }
+    elBtnAnchorSet.setAttribute('color', 'danger');
+    enableAnchorTuningButtons(true);
+  } else {
+    if (labelSpan) {
+      labelSpan.dataset.i18n = 'anchor_set';
+      labelSpan.textContent = t('anchor_set', gpsEngine.getLanguage());
+    }
+    elBtnAnchorSet.setAttribute('color', 'secondary');
+    enableAnchorTuningButtons(false);
+  }
 }
 
 function toggleSectorSettingsState(active: boolean): void {
@@ -523,122 +536,80 @@ function setupEventListeners(): void {
     });
   }
 
-  // B. Drop Anchor Button (Manual placement)
-elBtnAnchorSet.addEventListener('click', () => {
+  // B. Drop/Lift Anchor Button & Coupled Alarm Toggle
+  elBtnAnchorSet.addEventListener('click', async () => {
     audioSynth.unlock();
     const existingAnchor = gpsEngine.getAnchor();
-    const labelSpan = elBtnAnchorSet.querySelector('span[data-i18n]') as HTMLSpanElement;
     if (existingAnchor) {
-        if (confirm(t('lift_anchor_confirm', gpsEngine.getLanguage()))) {
-            // Stop simulation if active
-            if (gpsEngine.getIsSimulationMode()) {
-                gpsEngine.setSimulationMode(false);
-                // Reset local simulation state
-                simMode = null;
-                if (simSwayIntervalId !== null) {
-                    window.clearInterval(simSwayIntervalId);
-                    simSwayIntervalId = null;
-                }
-                elBtnSimMode.classList.remove('active');
-                elSimControlPanel.classList.add('hidden');
-                updateSimModeButtons();
-            }
-            gpsEngine.clearAnchor();
-            gpsEngine.clearVesselHistory();
-            appMap.clearAnchor(); // Remove anchor marker and safety circle/sector from map
-            appMap.clearVesselTrack();
-            // Update label to "Set Anchor" after clearing
-            labelSpan.dataset.i18n = 'anchor_set';
-            labelSpan.textContent = t('anchor_set', gpsEngine.getLanguage());
-            enableArmingButton(false);
-            enableAnchorTuningButtons(false);
+      if (confirm(t('lift_anchor_confirm', gpsEngine.getLanguage()))) {
+        // Stop simulation if active
+        if (gpsEngine.getIsSimulationMode()) {
+          gpsEngine.setSimulationMode(false);
+          // Reset local simulation state
+          simMode = null;
+          if (simSwayIntervalId !== null) {
+            window.clearInterval(simSwayIntervalId);
+            simSwayIntervalId = null;
+          }
+          elBtnSimMode.classList.remove('active');
+          elSimControlPanel.classList.add('hidden');
+          updateSimModeButtons();
         }
-        // If cancelled, keep label as "Lift Anchor" (already set)
-        return;
+        gpsEngine.clearAnchor();
+        gpsEngine.clearVesselHistory();
+        appMap.clearAnchor(); // Remove anchor marker and safety circle/sector from map
+        appMap.clearVesselTrack();
+        
+        updateAnchorButtonUI();
+        
+        // Coupled Deactivation: Release Wake Lock and silence alarms
+        await wakeLockManager.release();
+        audioSynth.silenceAll();
+      }
+      return;
     }
-    // If tracking possesses a coordinates lock, anchor there.
-    // Otherwise drop anchor in center of current map viewpoint.
+    
+    // Set anchor
     let targetLat = 54.3210;
     let targetLng = 10.1234;
     
     const boatLatLng = appMap.getBoatLatLng();
     if (boatLatLng) {
-        targetLat = boatLatLng.lat;
-        targetLng = boatLatLng.lng;
+      targetLat = boatLatLng.lat;
+      targetLng = boatLatLng.lng;
     }
     
     gpsEngine.setAnchor(targetLat, targetLng);
     const r = gpsEngine.getAlarmRadius();
     appMap.updateAnchorMarker(
-        targetLat, 
-        targetLng, 
-        r, 
-        gpsEngine.getIsArmed() ? 'SAFE' : 'DISARMED',
-        gpsEngine.getUseSectorAlarm(),
-        gpsEngine.getSectorWidth(),
-        gpsEngine.getSectorHeading(),
-        gpsEngine.getLockAnchorAfterSet()
+      targetLat, 
+      targetLng, 
+      r, 
+      'SAFE', // Automatically Safe/Armed
+      gpsEngine.getUseSectorAlarm(),
+      gpsEngine.getSectorWidth(),
+      gpsEngine.getSectorHeading(),
+      gpsEngine.getLockAnchorAfterSet()
     );
     
-    // Update label to "Lift Anchor" after setting
-    labelSpan.dataset.i18n = 'alarm_disarm';
-    labelSpan.textContent = t('alarm_disarm', gpsEngine.getLanguage());
-    
-    // Flash green visual overlay confirmation
-    enableArmingButton(true);
-    enableAnchorTuningButtons(true);
+    updateAnchorButtonUI();
  
-    // Play synthesized check
+    // Coupled Activation: Request Wake Lock and play confirmation
+    await wakeLockManager.acquire();
     audioSynth.playSonarPing();
-});
-
-  // C. Arm / Disarm Toggle
-  elBtnAlarmArm.addEventListener('click', async () => {
-    // Unlock Web Audio immediately (safeguard for browser gesture rules)
-    audioSynth.unlock();
-
-    const isArmedNow = gpsEngine.getIsArmed();
-    const newArmState = !isArmedNow;
-
-    gpsEngine.setArmed(newArmState);
-    const lang = gpsEngine.getLanguage();
-
-    if (newArmState) {
-      // Ramping to Armed
-      elBtnAlarmArm.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        ${t('alarm_disarm', lang)}
-      `;
-      elBtnAlarmArm.className = 'btn btn-primary armed';
-      
-      // Request Wake Lock to prevent screen sleep over long nights
-      await wakeLockManager.acquire();
-    } else {
-      // Disarming
-      elBtnAlarmArm.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        ${t('alarm_arm', lang)}
-      `;
-      elBtnAlarmArm.className = 'btn btn-primary';
-      
-      // Release Wake Lock
-      await wakeLockManager.release();
-      audioSynth.silenceAll();
-    }
   });
 
-  // D. Strobe Alarm Screen Mute
-  elStrobeMuteBtn.addEventListener('click', () => {
-    // Instantly disarms entire alert
-    gpsEngine.setArmed(false);
-    wakeLockManager.release();
-    audioSynth.silenceAll();
+  // D. Strobe Alarm Screen Mute (Instantly clears anchor and disarms)
+  elStrobeMuteBtn.addEventListener('click', async () => {
+    gpsEngine.clearAnchor();
+    gpsEngine.clearVesselHistory();
+    appMap.clearAnchor();
+    appMap.clearVesselTrack();
     
-    elBtnAlarmArm.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      ${t('alarm_arm', gpsEngine.getLanguage())}
-    `;
-    elBtnAlarmArm.className = 'btn btn-primary';
+    updateAnchorButtonUI();
+    
+    await wakeLockManager.release();
+    audioSynth.silenceAll();
     elAlarmStrobe.classList.add('hidden');
   });
 
@@ -692,14 +663,14 @@ elBtnAnchorSet.addEventListener('click', () => {
           54.3210, 
           10.1234, 
           gpsEngine.getAlarmRadius(), 
-          'DISARMED',
+          'SAFE', // Automatically Safe/Armed
           gpsEngine.getUseSectorAlarm(),
           gpsEngine.getSectorWidth(),
           gpsEngine.getSectorHeading(),
           gpsEngine.getLockAnchorAfterSet()
         );
-        enableArmingButton(true);
-        enableAnchorTuningButtons(true);
+        updateAnchorButtonUI();
+        wakeLockManager.acquire();
       }
       gpsEngine.startSwingSimulation();
       simMode = 'swing'; // default: swing mode on activation
@@ -876,12 +847,8 @@ elBtnAnchorSet.addEventListener('click', () => {
     gpsEngine.setLanguage(lang);
     translateDOM(lang);
     
-    // Dynamically update the armed button labels in real-time
-    const isArmed = gpsEngine.getIsArmed();
-    elBtnAlarmArm.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      ${t(isArmed ? 'alarm_disarm' : 'alarm_arm', lang)}
-    `;
+    // Dynamically update the anchor button label in real-time
+    updateAnchorButtonUI();
 
     // Redraw indicators using new language dictionary
     updateAlarmStatusUI(lastState);
@@ -903,13 +870,15 @@ elBtnAnchorSet.addEventListener('click', () => {
     }
   });
 
-  elBtnClearTrackQuick.addEventListener('click', () => {
-    audioSynth.unlock();
-    if (confirm(t('confirm_clear_track', gpsEngine.getLanguage()))) {
-      gpsEngine.clearVesselHistory();
-      appMap.clearVesselTrack();
-    }
-  });
+  if (elBtnClearTrackQuick) {
+    elBtnClearTrackQuick.addEventListener('click', () => {
+      audioSynth.unlock();
+      if (confirm(t('confirm_clear_track', gpsEngine.getLanguage()))) {
+        gpsEngine.clearVesselHistory();
+        appMap.clearVesselTrack();
+      }
+    });
+  }
 
   elSelectLengthUnit.addEventListener('ionChange', (e: any) => {
     const unit = e.target.value as 'm' | 'ft';

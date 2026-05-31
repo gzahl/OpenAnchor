@@ -200,6 +200,7 @@ export class GPSEngine {
     this.anchorPosition = { lat, lng };
     localStorage.setItem('openanchor_anchor_lat', lat.toString());
     localStorage.setItem('openanchor_anchor_lng', lng.toString());
+    this.setArmed(true);
     this.evaluateAlarmState();
     this.syncNativeService();
   }
@@ -256,6 +257,7 @@ export class GPSEngine {
     this.anchorPosition = null;
     localStorage.removeItem('openanchor_anchor_lat');
     localStorage.removeItem('openanchor_anchor_lng');
+    this.setArmed(false);
     this.evaluateAlarmState();
     this.syncNativeService();
   }

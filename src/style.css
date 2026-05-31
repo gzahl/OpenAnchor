@@ -1495,10 +1495,13 @@ input:checked + .toggle-slider:before {
   color: var(--neon-red) !important;
 }
 
-/* Pulsing active state for anchorage button */
+/* Pulsing active states for settings buttons */
 #btn-anchorage-toggle.active {
-  background: rgba(0, 210, 255, 0.12);
-  color: var(--neon-blue);
-  border-color: var(--border-neon-dim);
-  box-shadow: 0 0 10px rgba(0, 210, 255, 0.25);
+  --background: var(--neon-blue) !important;
+  --color: #ffffff !important;
+}
+
+#btn-sound-test.active {
+  --background: var(--neon-orange) !important;
+  --color: #000000 !important;
 }

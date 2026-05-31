@@ -100,14 +100,8 @@ async function run() {
       exitCode = 1;
     }
 
-    // Try to click Sound Test button to confirm interactive elements work
-    console.log("5. Testing click interactions on sound test button...");
-    await page.click('#btn-sound-test');
-    await new Promise(r => setTimeout(r, 1000));
-    console.log("✅ SUCCESS: Sound Test Button click interaction tested successfully.");
-
-    // 5.5. Test the settings menu and tabs (new settings tests)
-    console.log("5.5. Testing settings menu opening, tab texts, panel visibility, sliding transitions, and closing...");
+    // 5. Test the settings menu and tabs (new settings tests)
+    console.log("5. Testing settings menu opening, tab texts, panel visibility, sliding transitions, and closing...");
     
     // Click Settings Button to open settings
     console.log("  - Clicking settings button to open settings menu...");
@@ -127,6 +121,12 @@ async function run() {
       console.error("  ❌ FAILURE: Settings Menu did not report as open.");
       exitCode = 1;
     }
+
+    // Try to click Sound Test button now that the menu is open to confirm interactive elements work
+    console.log("  - Testing click interactions on sound test button inside settings...");
+    await page.click('#btn-sound-test');
+    await new Promise(r => setTimeout(r, 1000));
+    console.log("  ✅ SUCCESS: Sound Test Button click interaction tested successfully.");
 
     // Verify settings tab text labels exist and are populated
     const tabTexts = await page.evaluate(() => {
