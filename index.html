@@ -168,40 +168,19 @@
         
         <!-- Top Docked Navigation Bar -->
         <ion-header>
-          <ion-toolbar color="dark" style="--background: #0b1325; --border-color: #1b2a47; border-bottom: 1px solid #1b2a47;">
+          <!-- Row 1: Brand Logo & Action Buttons -->
+          <ion-toolbar color="dark" style="--background: #0b1325; --border-color: #1b2a47;">
             <!-- App Brand Logo & Title -->
             <ion-buttons slot="start">
-              <svg class="anchor-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 26px; height: 26px; margin-left: 12px; color: var(--neon-blue);">
+              <svg class="anchor-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 24px; height: 24px; margin-left: 12px; color: var(--neon-blue);">
                 <circle cx="12" cy="5" r="3"/>
                 <line x1="12" y1="22" x2="12" y2="8"/>
                 <path d="M5 12H2a10 10 0 0 0 20 0h-3"/>
               </svg>
               <div style="display: flex; flex-direction: column; margin-left: 10px; justify-content: center;">
-                <span style="font-weight: 700; font-size: 1.15rem; line-height: 1.1; color: var(--text-bright); font-family: var(--font-sans);">OpenAnchor</span>
-                <span style="font-size: 0.68rem; color: var(--text-muted); font-family: var(--font-sans); margin-top: 2px;" id="app-version" data-i18n="logo_sub">Freier & offener Anker-Alarm</span>
+                <span style="font-weight: 700; font-size: 1.1rem; line-height: 1.1; color: var(--text-bright); font-family: var(--font-sans);">OpenAnchor</span>
               </div>
             </ion-buttons>
-
-            <!-- Compact Telemetry in Toolbar Center -->
-            <div class="header-telemetry" style="display: flex; gap: 8px; align-items: center; justify-content: center; height: 100%;">
-              <!-- Distance Badge -->
-              <div class="header-stat" style="display: flex; align-items: center; gap: 4px; background: rgba(0, 0, 0, 0.12); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border-glass);">
-                <span style="font-size: 0.58rem; color: var(--text-muted); font-weight: 700; letter-spacing: 0.3px;" data-i18n="scope_dist">ENTFERNUNG</span>
-                <span id="dist-val" class="digital-value" style="font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; color: var(--neon-blue);">--.-</span>
-                <span class="header-stat-unit" style="font-size: 0.58rem; color: var(--text-muted); font-weight: 700;" data-i18n="meters">M</span>
-              </div>
-              <!-- GPS Accuracy / Status Badge (doubles as status-gps) -->
-              <div id="status-gps" class="indicator gps-waiting header-stat" style="display: flex; align-items: center; gap: 4px; background: rgba(0, 0, 0, 0.12); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border-glass);">
-                <span class="dot" style="width: 5px; height: 5px; border-radius: 50%; display: inline-block;"></span>
-                <span class="text" style="font-size: 0.58rem; color: var(--text-muted); font-weight: 700;" data-i18n="gps_searching">GPS SUCHE</span>
-                <span id="accuracy-val" class="digital-value" style="font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; color: var(--neon-orange);">±--</span>
-              </div>
-              <!-- Alarm Armed Status -->
-              <div id="status-alarm" class="indicator alarm-disarmed" style="display: flex; align-items: center; gap: 4px; background: rgba(0, 0, 0, 0.12); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border-glass);">
-                <span class="dot" style="width: 5px; height: 5px; border-radius: 50%; display: inline-block;"></span>
-                <span class="text" style="font-size: 0.58rem; color: var(--text-muted); font-weight: 700;" data-i18n="status_inactive">INAKTIV</span>
-              </div>
-            </div>
 
             <!-- Toolbar Action Utilities Flanked Right -->
             <ion-buttons slot="end" style="margin-right: 6px;">
@@ -228,6 +207,29 @@
                 </ion-button>
               </ion-menu-toggle>
             </ion-buttons>
+          </ion-toolbar>
+
+          <!-- Row 2: Telemetry Data (Distance, GPS & Alarm state), smaller and centered -->
+          <ion-toolbar color="dark" style="--background: #050b14; --border-color: #1b2a47; border-bottom: 1px solid #1b2a47; min-height: 34px; --min-height: 34px; height: 34px;">
+            <div class="header-telemetry" style="display: flex; gap: 6px; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 2px 0;">
+              <!-- Distance Badge -->
+              <div class="header-stat" style="display: flex; align-items: center; gap: 3px; background: rgba(0, 0, 0, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-glass); height: 26px;">
+                <span style="font-size: 0.52rem; color: var(--text-muted); font-weight: 700; letter-spacing: 0.3px;" data-i18n="scope_dist">ENTFERNUNG</span>
+                <span id="dist-val" class="digital-value" style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; color: var(--neon-blue);">--.-</span>
+                <span class="header-stat-unit" style="font-size: 0.52rem; color: var(--text-muted); font-weight: 700;" data-i18n="meters">M</span>
+              </div>
+              <!-- GPS Accuracy / Status Badge (doubles as status-gps) -->
+              <div id="status-gps" class="indicator gps-waiting header-stat" style="display: flex; align-items: center; gap: 3px; background: rgba(0, 0, 0, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-glass); height: 26px;">
+                <span class="dot" style="width: 4px; height: 4px; border-radius: 50%; display: inline-block;"></span>
+                <span class="text" style="font-size: 0.52rem; color: var(--text-muted); font-weight: 700;" data-i18n="gps_searching">GPS SUCHE</span>
+                <span id="accuracy-val" class="digital-value" style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; color: var(--neon-orange);">±--</span>
+              </div>
+              <!-- Alarm Armed Status -->
+              <div id="status-alarm" class="indicator alarm-disarmed header-stat" style="display: flex; align-items: center; gap: 3px; background: rgba(0, 0, 0, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-glass); height: 26px;">
+                <span class="dot" style="width: 4px; height: 4px; border-radius: 50%; display: inline-block;"></span>
+                <span class="text" style="font-size: 0.52rem; color: var(--text-muted); font-weight: 700;" data-i18n="status_inactive">INAKTIV</span>
+              </div>
+            </div>
           </ion-toolbar>
         </ion-header>
 
