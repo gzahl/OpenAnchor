@@ -265,6 +265,12 @@ body, html {
 }
 .alarm-triggered .text { color: var(--neon-red); }
 
+.alarm-paused .dot {
+  background-color: #6c7a89;
+}
+.alarm-paused .text { color: #6c7a89; }
+
+
 /* Top Header Quick Action Icons (Ultra Compact) */
 .quick-actions {
   display: flex;

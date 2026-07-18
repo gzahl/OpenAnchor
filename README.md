@@ -160,6 +160,7 @@ Once your secrets are set up, pushing a commit to `master` will trigger the buil
 2. Adjust the **Alarm-Radius** using the +/− buttons or the numeric input.
 3. Fine-tune the anchor position if needed with the **D-Pad** (1 m steps).
 4. Tap **SCHARF SCHALTEN** to arm the alarm.
+5. Tap **PAUSIEREN** (Pause) when leaving the boat to temporarily disable monitoring. Tap **FORTSETZEN** (Resume) to re-enable it. All existing track points and circle overlays are preserved.
 
 ### Alarm States
 
@@ -168,6 +169,7 @@ Once your secrets are set up, pushing a commit to `master` will trigger the buil
 | 🔵 Blue | Armed & safe — within radius |
 | 🟠 Orange | Warning — approaching the boundary |
 | 🔴 Red + strobe | Alarm — boat has drifted outside the radius |
+| 🔘 Grey | Paused — alarms silenced, track recording suspended |
 
 Tap **STUMMSCHALTEN** on the strobe screen or the arm button again to disarm.
 
@@ -203,6 +205,7 @@ Open the settings panel via the ⚙ gear icon. The panel is organised into three
 - **Language** — overrides the browser/system default
 - **Units** — Meters or Feet
 - **Anchor Lock** — prevent accidentally moving the anchor after setting it
+- **Background Sonar** — toggle the confirmation and periodic comforting background tone
 
 ### Design
 - **Theme colour** — accent colour for the anchor icon, safety zones and track dots

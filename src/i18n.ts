@@ -31,6 +31,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     status_inactive: 'INAKTIV',
     status_armed: 'SCHARF',
     status_alarm: 'ABDRIFT!',
+    status_paused: 'PAUSIERT',
     logo_sub: 'Freier & offener Anker-Alarm',
 
     // Stats Panel
@@ -82,6 +83,9 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     settings_theme_color: 'Instrumenten-Farbe:',
     settings_lock_header: 'Anker-Sperre',
     settings_lock_anchor: 'Anker nach Setzen sperren (nur D-Pad)',
+    settings_enable_sonar: 'Hintergrund-Sonar aktivieren',
+    anchor_pause: 'PAUSIEREN',
+    anchor_resume: 'FORTSETZEN',
     
     // Sector Alarm
     settings_sector_enable: 'Sektor-Alarm aktivieren',
@@ -128,6 +132,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     status_inactive: 'INACTIVE',
     status_armed: 'ARMED',
     status_alarm: 'DRIFTING!',
+    status_paused: 'PAUSED',
     logo_sub: 'Free & Open Source Anchor Watch',
 
     // Stats Panel
@@ -179,6 +184,9 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     settings_theme_color: 'Instrument Color:',
     settings_lock_header: 'Anchor Lock',
     settings_lock_anchor: 'Lock anchor after setting (D-Pad only)',
+    settings_enable_sonar: 'Enable background sonar',
+    anchor_pause: 'PAUSE',
+    anchor_resume: 'RESUME',
 
     // Sector Alarm
     settings_sector_enable: 'Enable Sector Alarm',

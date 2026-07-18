@@ -228,7 +228,7 @@ export class OpenAnchorMap {
   ): void {
     if (!this.map) return;
 
-    const strokeThemeColor = state === 'ALARM' ? '#ff3366' : this.themeColor;
+    const strokeThemeColor = state === 'ALARM' ? '#ff3366' : (state === 'PAUSED' ? '#6c7a89' : this.themeColor);
 
     // Create Custom Glowing Anchor SVG DivIcon
     const anchorIcon = L.divIcon({

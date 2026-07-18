@@ -74,8 +74,10 @@ const elBtnClearTrackQuick = document.getElementById('btn-clear-track-quick') as
 
 const elSelectLanguage = document.getElementById('select-language') as any;
 const elChkLockAnchor = document.getElementById('chk-lock-anchor') as any;
+const elChkEnableSonar = document.getElementById('chk-enable-sonar') as any;
 const elSelectLengthUnit = document.getElementById('select-length-unit') as any;
 const elBtnAnchorageToggle = document.getElementById('btn-anchorage-toggle') as any;
+const elBtnAnchorPause = document.getElementById('btn-anchor-pause') as any;
 
 // Settings Tab Elements
 const elTabBtns = document.querySelectorAll('.settings-tab') as any;
@@ -180,6 +182,9 @@ function initApp() {
   // Load anchor lock toggle
   if (elChkLockAnchor) elChkLockAnchor.checked = gpsEngine.getLockAnchorAfterSet();
 
+  // Load sonar background sound toggle
+  if (elChkEnableSonar) elChkEnableSonar.checked = gpsEngine.getEnableSonar();
+
   // Load and apply theme color
   const themeColor = gpsEngine.getThemeColor();
   if (elSelectThemeColor) elSelectThemeColor.value = themeColor;
@@ -283,6 +288,10 @@ function handleAlarmStateChange(state: AlarmState, distance: number): void {
       elDistVal.className = 'digital-value alarm';
       elScopeProgress.style.backgroundColor = 'var(--neon-red)';
       elScopeProgress.style.boxShadow = '0 0 12px var(--neon-red)';
+    } else if (state === 'PAUSED') {
+      elDistVal.className = 'digital-value paused';
+      elScopeProgress.style.backgroundColor = '#6c7a89';
+      elScopeProgress.style.boxShadow = '0 0 8px #6c7a89';
     }
   }
 
@@ -314,9 +323,11 @@ function handleAlarmStateChange(state: AlarmState, distance: number): void {
 
     if (state === 'SAFE') {
       // Periodic comforting sonar ping every 25 seconds while armed and safe
-      audioSynth.playSonarPing();
+      if (gpsEngine.getEnableSonar()) {
+        audioSynth.playSonarPing();
+      }
       sonarPingInterval = window.setInterval(() => {
-        if (gpsEngine.getIsArmed()) {
+        if (gpsEngine.getIsArmed() && gpsEngine.getEnableSonar()) {
           audioSynth.playSonarPing();
         }
       }, 25000);
@@ -334,6 +345,8 @@ function handleAlarmStateChange(state: AlarmState, distance: number): void {
       elStrobeDistance.innerText = distance.toFixed(1);
       elStrobeRadius.innerText = radius.toString();
     } else if (state === 'DISARMED') {
+      elAlarmStrobe.classList.add('hidden');
+    } else if (state === 'PAUSED') {
       elAlarmStrobe.classList.add('hidden');
     }
 
@@ -369,6 +382,10 @@ function updateAlarmStatusUI(state: AlarmState): void {
       elStatusAlarm.classList.add('alarm-triggered');
       txt.innerText = t('status_alarm', lang);
       break;
+    case 'PAUSED':
+      elStatusAlarm.classList.add('alarm-paused');
+      txt.innerText = t('status_paused', lang);
+      break;
   }
 }
 
@@ -402,6 +419,23 @@ function updateAnchorButtonUI(): void {
     if (elAnchorAdjusterPanel) {
       elAnchorAdjusterPanel.classList.remove('hidden');
     }
+    if (elBtnAnchorPause) {
+      elBtnAnchorPause.classList.remove('hidden');
+      const pauseLabelSpan = elBtnAnchorPause.querySelector('span[data-i18n]') as HTMLSpanElement;
+      if (gpsEngine.getIsPaused()) {
+        if (pauseLabelSpan) {
+          pauseLabelSpan.dataset.i18n = 'anchor_resume';
+          pauseLabelSpan.textContent = t('anchor_resume', gpsEngine.getLanguage());
+        }
+        elBtnAnchorPause.setAttribute('color', 'success');
+      } else {
+        if (pauseLabelSpan) {
+          pauseLabelSpan.dataset.i18n = 'anchor_pause';
+          pauseLabelSpan.textContent = t('anchor_pause', gpsEngine.getLanguage());
+        }
+        elBtnAnchorPause.setAttribute('color', 'warning');
+      }
+    }
   } else {
     if (labelSpan) {
       labelSpan.dataset.i18n = 'anchor_set';
@@ -411,6 +445,9 @@ function updateAnchorButtonUI(): void {
     enableAnchorTuningButtons(false);
     if (elAnchorAdjusterPanel) {
       elAnchorAdjusterPanel.classList.add('hidden');
+    }
+    if (elBtnAnchorPause) {
+      elBtnAnchorPause.classList.add('hidden');
     }
   }
 }
@@ -490,7 +527,7 @@ function setupEventListeners(): void {
           anchor.lat, 
           anchor.lng, 
           r, 
-          gpsEngine.getIsArmed() ? 'SAFE' : 'DISARMED',
+          gpsEngine.getIsArmed() ? lastState : 'DISARMED',
           gpsEngine.getUseSectorAlarm(),
           gpsEngine.getSectorWidth(),
           gpsEngine.getSectorHeading(),
@@ -577,8 +614,23 @@ function setupEventListeners(): void {
  
     // Coupled Activation: Request Wake Lock and play confirmation
     await wakeLockManager.acquire();
-    audioSynth.playSonarPing();
+    if (gpsEngine.getEnableSonar()) {
+      audioSynth.playSonarPing();
+    }
   });
+
+  if (elBtnAnchorPause) {
+    elBtnAnchorPause.addEventListener('click', () => {
+      audioSynth.unlock();
+      const paused = !gpsEngine.getIsPaused();
+      gpsEngine.setPaused(paused);
+      updateAnchorButtonUI();
+      if (paused) {
+        audioSynth.silenceAll();
+        elAlarmStrobe.classList.add('hidden');
+      }
+    });
+  }
 
   // D. Strobe Alarm Screen Mute (Silences siren but keeps anchor set)
   elStrobeMuteBtn.addEventListener('click', () => {
@@ -834,6 +886,13 @@ function setupEventListeners(): void {
     gpsEngine.setLockAnchorAfterSet(checked);
     triggerMapAnchorUpdate();
   });
+
+  if (elChkEnableSonar) {
+    elChkEnableSonar.addEventListener('ionChange', (e: any) => {
+      const checked = !!e.detail.checked;
+      gpsEngine.setEnableSonar(checked);
+    });
+  }
 
   elBtnClearTrack.addEventListener('click', () => {
     audioSynth.unlock();

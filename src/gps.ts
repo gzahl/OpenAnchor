@@ -18,7 +18,7 @@ export interface GPSPosition {
 }
 
 export type LengthUnit = 'm' | 'ft';
-export type AlarmState = 'DISARMED' | 'SAFE' | 'WARNING' | 'ALARM';
+export type AlarmState = 'DISARMED' | 'SAFE' | 'WARNING' | 'ALARM' | 'PAUSED';
 
 export class GPSEngine {
   private watchId: number | null = null;
@@ -62,6 +62,8 @@ export class GPSEngine {
   private language: LanguageCode = 'en';
   private lockAnchorAfterSet = true;
   private lengthUnit: LengthUnit = 'm';
+  private enableSonar = true;
+  private isPaused = false;
 
   constructor() {
     // Load persisted configurations
@@ -113,6 +115,20 @@ export class GPSEngine {
 
     const savedSectorHeading = localStorage.getItem('openanchor_sector_heading');
     if (savedSectorHeading) this.sectorHeading = parseInt(savedSectorHeading, 10);
+
+    const savedSonar = localStorage.getItem('openanchor_enable_sonar');
+    if (savedSonar !== null) {
+      this.enableSonar = savedSonar === 'true';
+    } else {
+      this.enableSonar = true;
+    }
+
+    const savedPaused = localStorage.getItem('openanchor_paused');
+    if (savedPaused !== null) {
+      this.isPaused = savedPaused === 'true';
+    } else {
+      this.isPaused = false;
+    }
 
     // Load history log
     try {
@@ -200,6 +216,8 @@ export class GPSEngine {
     this.anchorPosition = { lat, lng };
     localStorage.setItem('openanchor_anchor_lat', lat.toString());
     localStorage.setItem('openanchor_anchor_lng', lng.toString());
+    this.isPaused = false;
+    localStorage.removeItem('openanchor_paused');
     this.setArmed(true);
     this.evaluateAlarmState();
     this.syncNativeService();
@@ -257,6 +275,8 @@ export class GPSEngine {
     this.anchorPosition = null;
     localStorage.removeItem('openanchor_anchor_lat');
     localStorage.removeItem('openanchor_anchor_lng');
+    this.isPaused = false;
+    localStorage.removeItem('openanchor_paused');
     this.setArmed(false);
     this.evaluateAlarmState();
     this.syncNativeService();
@@ -334,7 +354,9 @@ export class GPSEngine {
       }
 
       this.lastPosition = gpsPos;
-      this.addTrackPoint(gpsPos); // Log position in track history
+      if (!this.isPaused) {
+        this.addTrackPoint(gpsPos); // Log position in track history
+      }
 
       if (this.onPositionUpdateCallback) {
         this.onPositionUpdateCallback(gpsPos);
@@ -401,7 +423,9 @@ export class GPSEngine {
       timestamp: now
     };
 
-    this.addTrackPoint(this.simPosition); // Log simulated point in history
+    if (!this.isPaused) {
+      this.addTrackPoint(this.simPosition); // Log simulated point in history
+    }
     this.triggerSimUpdate();
   }
 
@@ -571,7 +595,7 @@ export class GPSEngine {
       const anchor = this.getAnchor();
       const plugins = Capacitor.Plugins as any;
       if (plugins && plugins.BackgroundLocation) {
-        if (this.isArmed && anchor && !this.isSimulationMode) {
+        if (this.isArmed && !this.isPaused && anchor && !this.isSimulationMode) {
           plugins.BackgroundLocation.startService({
             lat: anchor.lat,
             lng: anchor.lng,
@@ -603,7 +627,7 @@ export class GPSEngine {
     }
 
     if (!this.anchorPosition || !currentPos) {
-      this.setAlarmState('SAFE', 0);
+      this.setAlarmState(this.isPaused ? 'PAUSED' : 'SAFE', 0);
       return;
     }
 
@@ -614,6 +638,11 @@ export class GPSEngine {
       this.anchorPosition.lat,
       this.anchorPosition.lng
     );
+
+    if (this.isPaused) {
+      this.setAlarmState('PAUSED', distance);
+      return;
+    }
 
     // Initial state based on radius distance check
     let newState: AlarmState = 'SAFE';
@@ -860,6 +889,24 @@ export class GPSEngine {
   public setLengthUnit(unit: LengthUnit): void {
     this.lengthUnit = unit;
     localStorage.setItem('openanchor_length_unit', unit);
+  }
+
+  public getEnableSonar(): boolean {
+    return this.enableSonar;
+  }
+  public setEnableSonar(enabled: boolean): void {
+    this.enableSonar = enabled;
+    localStorage.setItem('openanchor_enable_sonar', enabled.toString());
+  }
+
+  public getIsPaused(): boolean {
+    return this.isPaused;
+  }
+  public setPaused(paused: boolean): void {
+    this.isPaused = paused;
+    localStorage.setItem('openanchor_paused', paused.toString());
+    this.evaluateAlarmState();
+    this.syncNativeService();
   }
 
   public static convertMeters(meters: number, unit: LengthUnit): number {
