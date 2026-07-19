@@ -1109,7 +1109,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function setupSyncFeature(): void {
   // Listen to status changes from syncManager
-  syncManager.onStatusChanged((status) => {
+  syncManager.onStatusChanged((status: SyncStatus) => {
     if (elSyncStatusVal) {
       const lang = gpsEngine.getLanguage();
       let text = t(status.key, lang);
