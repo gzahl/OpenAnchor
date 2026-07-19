@@ -134,16 +134,18 @@ async function run() {
       const tabGeneral = document.querySelector('#tab-btn-general span');
       const tabDesign = document.querySelector('#tab-btn-design span');
       const tabTracks = document.querySelector('#tab-btn-tracks span');
+      const tabSync = document.querySelector('#tab-btn-sync span');
       
       texts.general = tabGeneral ? tabGeneral.textContent.trim() : null;
       texts.design = tabDesign ? tabDesign.textContent.trim() : null;
       texts.tracks = tabTracks ? tabTracks.textContent.trim() : null;
+      texts.sync = tabSync ? tabSync.textContent.trim() : null;
       return texts;
     });
 
     console.log("  - Settings Tab labels found:", JSON.stringify(tabTexts));
     
-    if (tabTexts.general && tabTexts.design && tabTexts.tracks) {
+    if (tabTexts.general && tabTexts.design && tabTexts.tracks && tabTexts.sync) {
       console.log("  ✅ SUCCESS: Settings Tab labels are non-empty and visible: " + JSON.stringify(tabTexts));
     } else {
       console.error("  ❌ FAILURE: Settings Tab labels are empty or missing: " + JSON.stringify(tabTexts));
@@ -210,6 +212,20 @@ async function run() {
       console.log("  ✅ SUCCESS: Tracks settings panel slid in and is now visible.");
     } else {
       console.error("  ❌ FAILURE: Tracks settings panel did not slide in or is not visible.");
+      exitCode = 1;
+    }
+
+    // Click Tab 4 (Sync) and verify slide transition
+    console.log("  - Clicking Sync tab...");
+    await page.click('#tab-btn-sync');
+    await new Promise(r => setTimeout(r, 800)); // wait for slide animation
+
+    const panelSyncStatus = await checkPanelVisibility('tab-panel-sync');
+    console.log("  - Tab 4 (Sync) panel status:", JSON.stringify(panelSyncStatus));
+    if (panelSyncStatus.exists && !panelSyncStatus.isDisplayNone && panelSyncStatus.isHorizontallyInViewport) {
+      console.log("  ✅ SUCCESS: Sync settings panel slid in and is now visible.");
+    } else {
+      console.error("  ❌ FAILURE: Sync settings panel did not slide in or is not visible.");
       exitCode = 1;
     }
 

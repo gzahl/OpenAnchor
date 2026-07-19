@@ -7,12 +7,15 @@ import { wakeLockManager } from './wakelock';
 import { translateDOM, t } from './i18n';
 import type { LanguageCode } from './i18n';
 import { Capacitor } from '@capacitor/core';
+import { syncManager } from './sync';
+import type { SyncMode, SyncStatus } from './sync';
 
 // Main application handles
 let appMap: OpenAnchorMap;
 let simMode: 'swing' | 'drift' | null = 'swing'; // active simulation mode
 let simSwayIntervalId: number | null = null;
 let firstLockAcquired = false;
+let remoteHistory: GPSPosition[] = [];
 
 // DOM Elements (Casted to any for 100% Ionic web components compatibility)
 const elDistVal = document.getElementById('dist-val') as any;
@@ -83,6 +86,19 @@ const elBtnAnchorPause = document.getElementById('btn-anchor-pause') as any;
 const elTabBtns = document.querySelectorAll('.settings-tab') as any;
 const elTabsTrack = document.querySelector('.settings-tabs-track') as HTMLDivElement;
 const elTabsViewport = document.querySelector('.settings-tabs-viewport') as HTMLDivElement;
+
+// Sync UI Elements
+const elSyncModeSelector = document.getElementById('sync-mode-selector') as any;
+const elSyncStatusVal = document.getElementById('sync-status-val') as HTMLSpanElement;
+const elSyncPanelBoat = document.getElementById('sync-panel-boat') as HTMLDivElement;
+const elSyncPanelShore = document.getElementById('sync-panel-shore') as HTMLDivElement;
+const elSyncQrImage = document.getElementById('sync-qr-image') as HTMLImageElement;
+const elSyncQrPlaceholder = document.getElementById('sync-qr-placeholder') as HTMLDivElement;
+const elSyncTopicDisplay = document.getElementById('sync-topic-display') as HTMLSpanElement;
+const elBtnSyncScan = document.getElementById('btn-sync-scan') as any;
+const elSyncManualInput = document.getElementById('sync-manual-input') as HTMLInputElement;
+const elBtnSyncManualConnect = document.getElementById('btn-sync-manual-connect') as any;
+const elHeaderRemoteBadge = document.getElementById('header-remote-badge') as HTMLDivElement;
 
 /* ==========================================================================
    1. Initialize Map & GPS Bindings
@@ -196,6 +212,9 @@ function initApp() {
 
   // Try to acquire initial GPS lock
   gpsEngine.startTracking();
+
+  // Setup E2EE Sync features
+  setupSyncFeature();
 }
 
 /* ==========================================================================
@@ -208,7 +227,9 @@ function initApp() {
 function handlePositionUpdate(pos: GPSPosition): void {
   // 1. Update Status Indicator
   elStatusGps.className = 'indicator gps-ready';
-  elStatusGps.querySelector('.text')!.innerHTML = t('gps_lock', gpsEngine.getLanguage());
+  elStatusGps.querySelector('.text')!.innerHTML = syncManager.getMode() === 'shore'
+    ? t('tab_sync', gpsEngine.getLanguage()) + ' (Remote)'
+    : t('gps_lock', gpsEngine.getLanguage());
 
   // 2. Center map on first lock
   if (!firstLockAcquired) {
@@ -243,8 +264,9 @@ function handlePositionUpdate(pos: GPSPosition): void {
   }
 
   // 5. Draw the historical tracking route
+  const history = syncManager.getMode() === 'shore' ? remoteHistory : gpsEngine.getVesselHistory();
   appMap.drawVesselTrack(
-    gpsEngine.getVesselHistory(), 
+    history, 
     gpsEngine.getDisplayLimitHours(),
     gpsEngine.getTrackPointSize(),
     gpsEngine.getTrackMinOpacity()
@@ -354,6 +376,14 @@ function handleAlarmStateChange(state: AlarmState, distance: number): void {
   } else if (state === 'ALARM') {
     // Keep strobe stats refreshed in real-time
     elStrobeDistance.innerText = distance.toFixed(1);
+  }
+
+  // 4. E2EE Boat mode broadcast
+  if (syncManager.getMode() === 'boat') {
+    const pos = gpsEngine.getCurrentPosition();
+    if (pos) {
+      syncManager.broadcast(pos, gpsEngine, distance, state);
+    }
   }
 }
 
@@ -1072,3 +1102,289 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+/* ==========================================================================
+   5. E2EE Multi-Device Synchronization & Shore Monitoring
+   ========================================================================== */
+
+function setupSyncFeature(): void {
+  // Listen to status changes from syncManager
+  syncManager.onStatusChanged((status) => {
+    if (elSyncStatusVal) {
+      const lang = gpsEngine.getLanguage();
+      let text = t(status.key, lang);
+      if (status.param !== undefined) {
+        text = text.replace('{count}', String(status.param)).replace('{error}', String(status.param));
+      }
+      elSyncStatusVal.innerText = text;
+      elSyncStatusVal.style.color = status.isError 
+        ? 'var(--neon-red)' 
+        : (syncManager.getIsConnected() ? 'var(--neon-green)' : '#8c9bb4');
+    }
+    updateSyncBadgeVisibility();
+  });
+
+  // Listen to incoming telemetry from shore monitor
+  syncManager.onTelemetryReceived((telemetry) => {
+    if (syncManager.getMode() !== 'shore') return;
+
+    // 1. Store remote history
+    const pos: GPSPosition = {
+      lat: telemetry.position.lat,
+      lng: telemetry.position.lng,
+      accuracy: telemetry.position.accuracy,
+      speed: telemetry.position.speed,
+      heading: telemetry.position.heading,
+      timestamp: telemetry.timestamp
+    };
+
+    // Prevent duplicate coordinates in remote history
+    const lastPoint = remoteHistory[remoteHistory.length - 1];
+    if (!lastPoint || lastPoint.lat !== pos.lat || lastPoint.lng !== pos.lng || lastPoint.timestamp !== pos.timestamp) {
+      remoteHistory.push(pos);
+      // Cap remote history length to history limit to avoid memory leaks
+      const maxPoints = 2000;
+      if (remoteHistory.length > maxPoints) {
+        remoteHistory.shift();
+      }
+    }
+
+    // 2. Set the remote state in gpsEngine
+    gpsEngine.setRemoteState(telemetry);
+
+    // 3. Update the UI & map
+    handlePositionUpdate(pos);
+    handleAlarmStateChange(telemetry.alarm.alarmState, telemetry.alarm.distance);
+  });
+
+  // Handle Sync Mode Selector segment clicks
+  if (elSyncModeSelector) {
+    elSyncModeSelector.addEventListener('ionChange', async (e: any) => {
+      const mode = e.detail.value as SyncMode;
+      if (mode === 'none') {
+        syncManager.disconnect();
+        if (elSyncPanelBoat) elSyncPanelBoat.classList.add('hidden');
+        if (elSyncPanelShore) elSyncPanelShore.classList.add('hidden');
+        
+        // Re-enable local inputs
+        elBtnAnchorSet.removeAttribute('disabled');
+        enableAnchorTuningButtons(gpsEngine.getIsArmed() && !gpsEngine.getLockAnchorAfterSet());
+        if (elChkLockAnchor) elChkLockAnchor.removeAttribute('disabled');
+        if (elChkSectorEnable) elChkSectorEnable.removeAttribute('disabled');
+        if (elSectorWidthSlider) elSectorWidthSlider.removeAttribute('disabled');
+        if (elSectorHeadingSlider) elSectorHeadingSlider.removeAttribute('disabled');
+        if (elSelectRadius) elSelectRadius.removeAttribute('disabled');
+
+        // Restart local tracking
+        gpsEngine.startTracking();
+        updateSyncBadgeVisibility();
+
+      } else if (mode === 'boat') {
+        if (elSyncPanelBoat) elSyncPanelBoat.classList.remove('hidden');
+        if (elSyncPanelShore) elSyncPanelShore.classList.add('hidden');
+
+        try {
+          const session = await syncManager.generateSession();
+          const dataUrl = await syncManager.generateQrCodeDataUrl(session.qrText);
+          if (elSyncQrImage) {
+            elSyncQrImage.src = dataUrl;
+            elSyncQrImage.style.display = 'block';
+          }
+          if (elSyncQrPlaceholder) elSyncQrPlaceholder.style.display = 'none';
+          if (elSyncTopicDisplay) elSyncTopicDisplay.innerText = session.topic;
+
+          await syncManager.startBoatMode(session.qrText);
+          updateSyncBadgeVisibility();
+        } catch (err) {
+          console.error("Failed to start boat mode:", err);
+        }
+
+      } else if (mode === 'shore') {
+        if (elSyncPanelShore) elSyncPanelShore.classList.remove('hidden');
+        if (elSyncPanelBoat) elSyncPanelBoat.classList.add('hidden');
+
+        syncManager.disconnect();
+        // Stop local tracking, as we are displaying remote telemetry
+        gpsEngine.stopTracking();
+        updateSyncBadgeVisibility();
+      }
+    });
+  }
+
+  // QR Code Scanning button
+  if (elBtnSyncScan) {
+    elBtnSyncScan.addEventListener('click', () => {
+      audioSynth.unlock();
+      startQrScanner();
+    });
+  }
+
+  // Manual Connection button
+  if (elBtnSyncManualConnect) {
+    elBtnSyncManualConnect.addEventListener('click', async () => {
+      audioSynth.unlock();
+      if (elSyncManualInput) {
+        const val = elSyncManualInput.value.trim();
+        if (val) {
+          await handleRemoteConnection(val);
+        } else {
+          const lang = gpsEngine.getLanguage();
+          alert(t('sync_manual_placeholder', lang));
+        }
+      }
+    });
+  }
+
+  // Attempt to restore persistent session on reload
+  const savedMode = localStorage.getItem('openanchor_sync_mode');
+  const savedConfig = localStorage.getItem('openanchor_sync_config');
+  if (savedMode === 'shore' && savedConfig) {
+    if (elSyncModeSelector) elSyncModeSelector.value = 'shore';
+    if (elSyncPanelShore) elSyncPanelShore.classList.remove('hidden');
+    handleRemoteConnection(savedConfig);
+  }
+}
+
+function updateSyncBadgeVisibility(): void {
+  if (elHeaderRemoteBadge) {
+    if (syncManager.getMode() !== 'none' && syncManager.getIsConnected()) {
+      elHeaderRemoteBadge.classList.remove('hidden');
+      const badgeTextSpan = elHeaderRemoteBadge.querySelector('span:not(.dot)') as HTMLSpanElement;
+      if (badgeTextSpan) {
+        const lang = gpsEngine.getLanguage();
+        badgeTextSpan.innerText = t(syncManager.getMode() === 'boat' ? 'sync_mode_boat' : 'sync_mode_shore', lang);
+      }
+    } else {
+      elHeaderRemoteBadge.classList.add('hidden');
+    }
+  }
+}
+
+async function handleRemoteConnection(qrText: string): Promise<void> {
+  const lang = gpsEngine.getLanguage();
+  try {
+    const config = JSON.parse(qrText);
+    if (!config.t || !config.k || !config.b) {
+      throw new Error(t('sync_invalid_config', lang));
+    }
+
+    if (elSyncStatusVal) elSyncStatusVal.innerText = t('sync_status_connecting', lang);
+    await syncManager.startShoreMode(qrText);
+
+    // Persist configuration in localStorage so we can resume if connection drops
+    localStorage.setItem('openanchor_sync_config', qrText);
+
+    // Disable all local inputs that modify alarm configuration
+    elBtnAnchorSet.setAttribute('disabled', 'true');
+    enableAnchorTuningButtons(false);
+    if (elChkLockAnchor) elChkLockAnchor.setAttribute('disabled', 'true');
+    if (elChkSectorEnable) elChkSectorEnable.setAttribute('disabled', 'true');
+    if (elSectorWidthSlider) elSectorWidthSlider.setAttribute('disabled', 'true');
+    if (elSectorHeadingSlider) elSectorHeadingSlider.setAttribute('disabled', 'true');
+    if (elSelectRadius) elSelectRadius.setAttribute('disabled', 'true');
+
+    updateSyncBadgeVisibility();
+  } catch (err: any) {
+    console.error("Failed to connect Shore mode:", err);
+    alert(t('sync_alert_connecting', lang) + err.message);
+    if (elSyncStatusVal) {
+      elSyncStatusVal.innerText = t('sync_connect_error_label', lang);
+      elSyncStatusVal.style.color = "var(--neon-red)";
+    }
+  }
+}
+
+async function startQrScanner(): Promise<void> {
+  const lang = gpsEngine.getLanguage();
+  // Check if BarcodeDetector is supported in browser
+  const hasBarcodeDetector = 'BarcodeDetector' in window;
+  if (!hasBarcodeDetector) {
+    alert(t('sync_alert_detector', lang));
+    return;
+  }
+
+  // Create scanner UI overlay dynamically
+  const scannerOverlay = document.createElement('div');
+  scannerOverlay.id = 'qr-scanner-overlay';
+  scannerOverlay.style.position = 'fixed';
+  scannerOverlay.style.top = '0';
+  scannerOverlay.style.left = '0';
+  scannerOverlay.style.width = '100%';
+  scannerOverlay.style.height = '100%';
+  scannerOverlay.style.backgroundColor = 'rgba(5, 11, 20, 0.95)';
+  scannerOverlay.style.zIndex = '9999';
+  scannerOverlay.style.display = 'flex';
+  scannerOverlay.style.flexDirection = 'column';
+  scannerOverlay.style.alignItems = 'center';
+  scannerOverlay.style.justifyContent = 'center';
+
+  scannerOverlay.innerHTML = `
+    <div style="position: relative; width: 280px; height: 280px; border: 2px solid var(--neon-blue); border-radius: 8px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);">
+      <video id="scanner-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+      <div style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--neon-blue); box-shadow: 0 0 8px var(--neon-blue); animation: scan-line 2s linear infinite;"></div>
+    </div>
+    <p style="color: #8c9bb4; font-size: 0.9rem; margin-bottom: 24px; text-align: center; padding: 0 20px;">
+      ${t('sync_scanner_prompt', lang)}
+    </p>
+    <ion-button id="btn-scanner-close" fill="outline" style="--border-color: var(--neon-red); --color: var(--neon-red); font-weight: 600;">
+      ${t('sync_scanner_cancel', lang)}
+    </ion-button>
+    <style>
+      @keyframes scan-line {
+        0% { top: 0%; }
+        50% { top: 100%; }
+        100% { top: 0%; }
+      }
+    </style>
+  `;
+
+  document.body.appendChild(scannerOverlay);
+
+  const video = document.getElementById('scanner-video') as HTMLVideoElement;
+  const btnClose = document.getElementById('btn-scanner-close') as any;
+
+  let stream: MediaStream | null = null;
+  let scanIntervalId: any = null;
+
+  const stopScan = () => {
+    if (scanIntervalId) clearInterval(scanIntervalId);
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    scannerOverlay.remove();
+  };
+
+  btnClose.addEventListener('click', stopScan);
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }
+    });
+    video.srcObject = stream;
+
+    // Initialize BarcodeDetector
+    // @ts-ignore
+    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+
+    scanIntervalId = setInterval(async () => {
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        try {
+          const barcodes = await detector.detect(video);
+          if (barcodes.length > 0) {
+            const rawValue = barcodes[0].rawValue;
+            console.log("QR Code scanned:", rawValue);
+            stopScan();
+            await handleRemoteConnection(rawValue);
+          }
+        } catch (err) {
+          console.error("Error detecting barcode:", err);
+        }
+      }
+    }, 300);
+
+  } catch (err: any) {
+    console.error("Camera access failed:", err);
+    alert(t('sync_alert_camera_failed', lang) + err.message);
+    stopScan();
+  }
+}

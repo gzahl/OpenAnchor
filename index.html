@@ -40,6 +40,9 @@
             <ion-segment-button value="tracks" class="settings-tab" id="tab-btn-tracks">
               <span data-i18n="tab_tracks">Track</span>
             </ion-segment-button>
+            <ion-segment-button value="sync" class="settings-tab" id="tab-btn-sync">
+              <span data-i18n="tab_sync">Fernzugriff</span>
+            </ion-segment-button>
           </ion-segment>
 
           <!-- Tab Panels -->
@@ -194,6 +197,79 @@
                 </div>
               </div>
 
+              <!-- TAB 4: Sync (E2EE Remote Sync) -->
+              <div class="settings-tab-panel" id="tab-panel-sync">
+                <div class="settings-group" style="margin-bottom: 16px;">
+                  <label class="settings-label-bold" style="display: block; margin-bottom: 4px;" data-i18n="sync_title">E2EE Fernüberwachung ⚓</label>
+                  <p class="settings-subtext font-small" style="margin-bottom: 12px; color: #8c9bb4; font-size: 0.8rem;" data-i18n="sync_desc">
+                    Koppele zwei Handys. Eines bleibt als Sender an Bord, das zweite dient als Monitor an Land (End-zu-End verschlüsselt über öffentlichen MQTT Broker).
+                  </p>
+
+                  <!-- Status Banner -->
+                  <div id="sync-status-banner" style="background: rgba(255,255,255,0.05); border: 1px solid #1b2a47; border-radius: 4px; padding: 10px; margin-bottom: 16px; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="color: #8c9bb4;" data-i18n="sync_status_label">Status:</span>
+                    <span id="sync-status-val" style="font-weight: 600; color: #6c7a89; font-family: var(--font-mono);" data-i18n="sync_status_inactive">Inaktiv</span>
+                  </div>
+
+                  <!-- Segment to choose Boat or Shore Mode -->
+                  <ion-segment value="none" id="sync-mode-selector" style="margin-bottom: 16px;">
+                    <ion-segment-button value="none">
+                      <span style="font-size: 0.8rem; font-weight: 600;" data-i18n="sync_mode_off">OFF</span>
+                    </ion-segment-button>
+                    <ion-segment-button value="boat">
+                      <span style="font-size: 0.8rem; font-weight: 600;" data-i18n="sync_mode_boat">SENDER</span>
+                    </ion-segment-button>
+                    <ion-segment-button value="shore">
+                      <span style="font-size: 0.8rem; font-weight: 600;" data-i18n="sync_mode_shore">MONITOR</span>
+                    </ion-segment-button>
+                  </ion-segment>
+
+                  <!-- Mode Panel: Boat (Broadcast) -->
+                  <div id="sync-panel-boat" class="hidden" style="text-align: center;">
+                    <div style="background: #131d32; border: 1px solid #1b2a47; border-radius: 4px; padding: 12px; margin-bottom: 16px;">
+                      <p class="font-small" style="color: #8c9bb4; margin-bottom: 12px; font-size: 0.8rem; text-align: left;" data-i18n="sync_boat_instructions">
+                        Scanne diesen QR-Code mit dem Monitor-Handy, um die sichere Live-Verbindung aufzubauen.
+                      </p>
+                      <!-- Canvas container for QR Code -->
+                      <div style="display: flex; justify-content: center; margin: 10px 0;">
+                        <img id="sync-qr-image" style="max-width: 200px; display: none; border-radius: 4px;" />
+                        <div id="sync-qr-placeholder" style="width: 200px; height: 200px; background: rgba(0,0,0,0.2); border: 1px dashed #1b2a47; border-radius: 4px; display: flex; justify-content: center; align-items: center; color: #8c9bb4; font-size: 0.8rem;" data-i18n="sync_qr_placeholder">
+                          Erzeuge Code...
+                        </div>
+                      </div>
+                      <div style="text-align: left; margin-top: 8px;">
+                        <span style="font-size: 0.72rem; color: #8c9bb4; font-family: var(--font-mono); word-break: break-all;" id="sync-topic-display"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Mode Panel: Shore (Monitor) -->
+                  <div id="sync-panel-shore" class="hidden" style="text-align: center;">
+                    <div style="background: #131d32; border: 1px solid #1b2a47; border-radius: 4px; padding: 12px; margin-bottom: 16px;">
+                      <p class="font-small" style="color: #8c9bb4; margin-bottom: 12px; font-size: 0.8rem; text-align: left;" data-i18n="sync_shore_instructions">
+                        Scanne den QR-Code des Boot-Senders, um die Live-Überwachung zu starten.
+                      </p>
+                      
+                      <!-- Scan Trigger button -->
+                      <ion-button id="btn-sync-scan" expand="block" fill="solid" style="--background: var(--neon-blue); font-weight: 600;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; margin-right: 6px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+                        <span data-i18n="sync_btn_scan">QR-CODE SCANNEN</span>
+                      </ion-button>
+
+                      <!-- Fallback input for manual debug/paste -->
+                      <div style="margin-top: 15px; text-align: left;">
+                        <label style="font-size: 0.72rem; color: #8c9bb4; display: block; margin-bottom: 4px;" data-i18n="sync_manual_label">Kopplungs-Daten einfügen (Alternative):</label>
+                        <input id="sync-manual-input" placeholder='{"b":...}' style="width: 100%; height: 32px; background: #0b1325; border: 1px solid #1b2a47; border-radius: 4px; color: #ffffff; padding: 0 8px; font-size: 0.75rem; font-family: var(--font-mono);" />
+                        <ion-button id="btn-sync-manual-connect" size="small" fill="outline" style="margin-top: 8px; font-weight: 600;">
+                          <span data-i18n="sync_btn_connect">Verbinden</span>
+                        </ion-button>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
             </div>
           </div>
         </ion-content>
@@ -236,6 +312,11 @@
           <!-- Row 2: Telemetry Data (Distance, GPS & Alarm state), smaller and centered -->
           <ion-toolbar color="dark" style="--background: #050b14; --border-color: #1b2a47; border-bottom: 1px solid #1b2a47; min-height: 34px; --min-height: 34px; height: 34px;">
             <div class="header-telemetry" style="display: flex; gap: 6px; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 2px 0;">
+              <!-- Remote Monitor Active Indicator (Hidden by default) -->
+              <div id="header-remote-badge" class="header-stat hidden" style="display: flex; align-items: center; gap: 3px; background: rgba(0, 210, 255, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--neon-blue); height: 26px;">
+                <span class="dot" style="width: 4px; height: 4px; border-radius: 50%; display: inline-block; background-color: var(--neon-blue); animation: blink 1.5s infinite;"></span>
+                <span style="font-size: 0.52rem; color: var(--neon-blue); font-weight: 700; letter-spacing: 0.3px;">FERNZUGRIFF</span>
+              </div>
               <!-- Distance Badge -->
               <div class="header-stat" style="display: flex; align-items: center; gap: 3px; background: rgba(0, 0, 0, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-glass); height: 26px;">
                 <span style="font-size: 0.52rem; color: var(--text-muted); font-weight: 700; letter-spacing: 0.3px;" data-i18n="scope_dist">ENTFERNUNG</span>

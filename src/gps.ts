@@ -195,6 +195,35 @@ export class GPSEngine {
     return this.isSimulationMode;
   }
 
+  public getCurrentPosition(): GPSPosition | null {
+    return this.isSimulationMode ? this.simPosition : this.lastPosition;
+  }
+
+  public setRemoteState(telemetry: any): void {
+    this.isArmed = telemetry.alarm.isArmed;
+    this.anchorPosition = telemetry.alarm.anchor;
+    this.alarmRadius = telemetry.alarm.alarmRadius;
+    this.useSectorAlarm = telemetry.alarm.useSectorAlarm;
+    this.sectorWidth = telemetry.alarm.sectorWidth;
+    this.sectorHeading = telemetry.alarm.sectorHeading;
+    this.isPaused = telemetry.alarm.isPaused;
+    if (telemetry.position) {
+      const pos = {
+        lat: telemetry.position.lat,
+        lng: telemetry.position.lng,
+        accuracy: telemetry.position.accuracy,
+        speed: telemetry.position.speed,
+        heading: telemetry.position.heading,
+        timestamp: telemetry.timestamp
+      };
+      if (this.isSimulationMode) {
+        this.simPosition = pos;
+      } else {
+        this.lastPosition = pos;
+      }
+    }
+  }
+
   /**
    * Set the safe boundary radius in meters
    */
